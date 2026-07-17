@@ -48,8 +48,14 @@ export default function Messages() {
   }, [convId]);
 
   // Marque la conversation comme lue à l'ouverture, et à chaque nouveau message reçu pendant qu'on la consulte.
+  // Le nettoyage refait le même marquage au moment de quitter cette conversation (changement de
+  // convId ou démontage) : si un message arrive juste avant que le composant ne démonte (ex. on
+  // envoie un message puis on navigue aussitôt ailleurs), l'effet lui-même n'a pas le temps de se
+  // redéclencher avec le nouveau msgs.length — sans ce filet, ce dernier message reste marqué non lu.
   useEffect(() => {
-    updateDB(draft => markConvRead(draft, convId));
+    const id = convId;
+    updateDB(draft => markConvRead(draft, id));
+    return () => { updateDB(draft => markConvRead(draft, id)); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [convId, msgs.length]);
 

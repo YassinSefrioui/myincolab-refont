@@ -1,5 +1,4 @@
 import Icon from './Icon.jsx';
-import Avatar from './Avatar.jsx';
 import { discussionUnreadTotal } from '../lib/helpers.js';
 import { useApp } from '../state/AppContext.jsx';
 
@@ -36,9 +35,6 @@ export default function NavRail() {
           </button>
         );
       })}
-      <span className="nav-user" onClick={() => go('profile')} title={t('profile')}>
-        <Avatar m={user} size="a30" withPresence />
-      </span>
     </nav>
   );
 }

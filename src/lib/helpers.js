@@ -166,10 +166,11 @@ export function unreadCount(db, convId) {
   const marker = (db.readMarkers && db.readMarkers[convId]) || 0;
   return list.filter(m => m.id > marker).length;
 }
-/** Marque une conversation comme lue jusqu'au dernier message (à appeler dans un updateDB). */
+/** Marque une conversation comme lue jusqu'au dernier message (à appeler dans un updateDB).
+ *  Le plus haut id, pas le dernier élément du tableau : voir la note sur lastMessage(). */
 export function markConvRead(draft, convId) {
   const list = draft.messagesByConv[convId] || [];
-  const lastId = list.length ? list[list.length - 1].id : 0;
+  const lastId = list.reduce((max, m) => Math.max(max, m.id), 0);
   if (!draft.readMarkers) draft.readMarkers = {};
   draft.readMarkers[convId] = lastId;
 }
@@ -207,9 +208,13 @@ export function taskCountByMember(db) {
 
 export const QUICK_REACTIONS = ['👍', '❤️', '😄', '🎉', '👀'];
 
+/** Le dernier message chronologique d'une conversation, par id (pas par position dans le
+ *  tableau : les réponses citées insérées juste après le message d'origine — voir migrateDB —
+ *  ne sont pas forcément en fin de tableau). */
 export function lastMessage(db, convId) {
   const list = db.messagesByConv[convId] || [];
-  return list.length ? list[list.length - 1] : null;
+  if (!list.length) return null;
+  return list.reduce((latest, m) => (m.id > latest.id ? m : latest), list[0]);
 }
 export function previewText(db, m) {
   if (!m) return '';

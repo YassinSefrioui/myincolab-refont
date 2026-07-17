@@ -20,7 +20,7 @@ function LegalModal() {
   );
 }
 
-export default function ProfileMenu({ onClose }) {
+export default function ProfileMenu({ onClose, closing }) {
   const { user, setUser, updateDB, prefs, setLang, go, openModal, logout, toast, t } = useApp();
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function ProfileMenu({ onClose }) {
   function doLogout() { logout(); onClose(); }
 
   return (
-    <div className="profile-menu">
+    <div className={`profile-menu${closing ? ' closing' : ''}`}>
       <div className="profile-menu-head">
         <Avatar m={user} size="a30" withPresence />
         <div style={{ minWidth: 0 }}>

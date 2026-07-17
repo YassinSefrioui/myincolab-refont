@@ -40,7 +40,7 @@ function aiAnswer(db, user, lang, q) {
 }
 
 export default function AIPanel() {
-  const { db, user, prefs, aiOpen, setAiOpen, aiHistory, setAiHistory, t } = useApp();
+  const { db, user, prefs, ui, aiOpen, setAiOpen, aiHistory, setAiHistory, t } = useApp();
   const [input, setInput] = useState('');
   const bodyRef = useRef(null);
 
@@ -57,7 +57,10 @@ export default function AIPanel() {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
   }, [aiHistory, aiOpen]);
 
-  if (!user) return null;
+  // Masquée sur la page Messages : la discussion a déjà son propre résumé IA dans l'en-tête.
+  useEffect(() => { if (ui.view === 'messages') setAiOpen(false); }, [ui.view, setAiOpen]);
+
+  if (!user || ui.view === 'messages') return null;
 
   function ask() {
     const q = input.trim();
