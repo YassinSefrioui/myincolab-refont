@@ -46,12 +46,12 @@ export default function Announcements() {
   const canPost = ['ADMIN', 'MANAGER'].includes(user.role);
   return (
     <div className="view-anim">
-      <div className="boards-head">
+      <div className="boards-head" data-tour="announcements-header">
         <h2 className="page-title" style={{ margin: 0 }}>{t('announcements')}</h2>
         {canPost && <button className="btn btn-primary btn-sm" onClick={() => openModal(<NewAnnouncementModal />)}>+ {t('newAnnouncement')}</button>}
       </div>
-      {db.announcements.map(a => (
-        <div className={`card announce-card ${a.type}`} key={a.id}>
+      {db.announcements.map((a, i) => (
+        <div className={`card announce-card ${a.type}`} key={a.id} {...(i === 0 ? { 'data-tour': 'announcements-list' } : {})}>
           <span className="tag-soft" style={a.type === 'global' ? { background: 'var(--accent-soft)', color: 'var(--accent)' } : { background: 'rgba(240,160,75,.18)', color: '#d18334' }}>
             {a.type === 'global' ? t('globalAnnouncement') : t('companyAnnouncement')}
           </span>

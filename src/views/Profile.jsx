@@ -55,7 +55,7 @@ export default function Profile() {
   return (
     <div className="view-anim" style={{ maxWidth: 660 }}>
       <h2 className="page-title">{t('profile')}</h2>
-      <div className="card" style={{ marginBottom: 16 }}>
+      <div className="card" style={{ marginBottom: 16 }} data-tour="profile-head">
         <div className="profile-head">
           <span className="profile-avatar" style={{ background: me.color }}>{me.initials}</span>
           <div>
@@ -69,7 +69,7 @@ export default function Profile() {
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }} data-tour="profile-prefs">
           <div style={{ flex: 1, minWidth: 160 }}>
             <label className="field-label">{t('language')}</label>
             <select className="select" value={prefs.lang} onChange={e => setLang(e.target.value)}>
@@ -94,7 +94,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: 16 }}>
+      <div className="card" style={{ marginBottom: 16 }} data-tour="profile-timezones">
         <div className="section-label">{t('timezones')}</div>
         {db.timezones.map(z => (
           <div className="tz-row" key={z.id}>
@@ -130,7 +130,7 @@ export default function Profile() {
         </div>
       )}
 
-      <div className="card">
+      <div className="card" data-tour="profile-security">
         <div className="section-label">{t('changePassword')}</div>
         <label className="field-label">{t('currentPassword')}</label>
         <input className="input" type="password" value={pwCur} onChange={e => setPwCur(e.target.value)} />

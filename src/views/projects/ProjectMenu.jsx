@@ -1,33 +1,45 @@
 import { useEffect, useRef, useState } from 'react';
 import { ModalHeader } from '../../components/Modal.jsx';
 import Icon from '../../components/Icon.jsx';
+import MemberPicker from '../../components/MemberPicker.jsx';
 import { useApp } from '../../state/AppContext.jsx';
 
-function RenameModal({ projectId }) {
+function EditProjectModal({ projectId }) {
   const { db, updateDB, closeModal, logAudit, toast, t } = useApp();
   const p = db.projects.find(x => x.id === projectId);
   const [name, setName] = useState(p ? p.name : '');
+  const [desc, setDesc] = useState(p ? (p.description || '') : '');
+  const [leadId, setLeadId] = useState(p ? p.leadId : null);
   if (!p) return null;
+
+  const leadCandidates = p.members.map(id => db.team.find(m => m.id === id)).filter(Boolean);
 
   function save() {
     const trimmed = name.trim();
     if (!trimmed) return;
     updateDB(draft => {
       const dp = draft.projects.find(x => x.id === projectId);
-      if (dp) dp.name = trimmed;
+      if (!dp) return;
+      dp.name = trimmed;
+      dp.description = desc.trim();
+      if (leadId && dp.members.includes(leadId)) dp.leadId = leadId;
     });
-    logAudit('PROJECT_RENAMED', `${p.name} → ${trimmed}`, false);
+    logAudit('PROJECT_UPDATED', trimmed, false);
     closeModal();
-    toast(t('projectRenamed'));
+    toast(t('projectUpdated'));
   }
 
   return (
     <>
-      <ModalHeader title={t('renameProject')} />
+      <ModalHeader title={t('editProject')} />
       <label className="field-label">{t('projectName')}</label>
       <input className="input" value={name} autoFocus
         onChange={e => setName(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') save(); }} />
+      <label className="field-label">{t('description')}</label>
+      <textarea className="textarea" value={desc} onChange={e => setDesc(e.target.value)} />
+      <label className="field-label">{t('projectLead')}</label>
+      <MemberPicker candidates={leadCandidates} selected={leadId} onChange={id => setLeadId(id)} multi={false} placeholder={t('projectLead')} />
       <div className="modal-foot">
         <button className="btn btn-ghost" onClick={closeModal}>{t('cancel')}</button>
         <button className="btn btn-primary" onClick={save}>{t('save')}</button>
@@ -111,8 +123,8 @@ export default function ProjectMenu({ projectId, onAfterRemove }) {
       <button className="proj-menu-btn" title={t('projectOptions')} onClick={() => setOpen(o => !o)}>⋯</button>
       {open && (
         <div className="proj-menu">
-          <button className="proj-menu-item" onClick={() => { setOpen(false); openModal(<RenameModal projectId={projectId} />); }}>
-            <Icon name="edit" /> {t('renameProject')}
+          <button className="proj-menu-item" onClick={() => { setOpen(false); openModal(<EditProjectModal projectId={projectId} />, { wide: true }); }}>
+            <Icon name="edit" /> {t('editProject')}
           </button>
           <button className="proj-menu-item" onClick={toggleCompleted}>
             <Icon name="check" /> {p.completed ? t('markProjectActive') : t('markProjectCompleted')}

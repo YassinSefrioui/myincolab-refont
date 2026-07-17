@@ -1,17 +1,72 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Avatar from '../components/Avatar.jsx';
 import DueTag from '../components/DueTag.jsx';
+import Icon from '../components/Icon.jsx';
 import { ModalHeader } from '../components/Modal.jsx';
 import MemberPicker from '../components/MemberPicker.jsx';
 import DatePicker from '../components/DatePicker.jsx';
 import TimePicker from '../components/TimePicker.jsx';
-import { DOW_LABELS, daysLeft, hasGuestExecute, member, nextId, toISODate } from '../lib/helpers.js';
+import { DOW_LABELS, daysLeft, hasGuestExecute, LOCALES, member, nextId, toISODate } from '../lib/helpers.js';
 import { useApp } from '../state/AppContext.jsx';
 
 function isoFromOffset(n) {
   const d = new Date();
   d.setDate(d.getDate() + n);
   return toISODate(d);
+}
+
+/** Sélecteur mois/année rapide : saisir directement une année évite de cliquer ‹ › en boucle. */
+function MonthYearPicker({ year, month, locale, onPick }) {
+  const [open, setOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(year);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setPickerYear(year);
+    function onDown(e) { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const monthNames = Array.from({ length: 12 }, (_, i) => new Date(2000, i, 1).toLocaleDateString(locale, { month: 'short' }));
+
+  function pickMonth(mIdx) {
+    onPick(pickerYear, mIdx);
+    setOpen(false);
+  }
+
+  return (
+    <span className="cmp-wrap" ref={wrapRef}>
+      <button type="button" className="btn btn-ghost btn-sm cal-month-trigger" onClick={() => setOpen(o => !o)}>
+        {new Date(year, month, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
+        <Icon name="chevron" style={{ width: 11, height: 11, opacity: .6 }} />
+      </button>
+      {open && (
+        <div className="cmp-panel">
+          <div className="cmp-year-row">
+            <button type="button" className="cmp-nav" onClick={() => setPickerYear(y => y - 1)}><Icon name="chevron" style={{ transform: 'rotate(90deg)' }} /></button>
+            <input
+              type="number" className="cmp-year-input" value={pickerYear}
+              onChange={e => { const v = Number(e.target.value); if (!Number.isNaN(v)) setPickerYear(v); }}
+              onKeyDown={e => { if (e.key === 'Enter') pickMonth(month); }}
+            />
+            <button type="button" className="cmp-nav" onClick={() => setPickerYear(y => y + 1)}><Icon name="chevron" style={{ transform: 'rotate(-90deg)' }} /></button>
+          </div>
+          <div className="cmp-grid">
+            {monthNames.map((label, i) => (
+              <button
+                type="button" key={label}
+                className={`cmp-cell${pickerYear === year && i === month ? ' selected' : ''}`}
+                onClick={() => pickMonth(i)}
+              >{label}</button>
+            ))}
+          </div>
+        </div>
+      )}
+    </span>
+  );
 }
 
 export function NewEventModal({ initialOffset = 0, eventId = null, title: modalTitle }) {
@@ -138,10 +193,7 @@ export default function Calendar() {
   const cur = ui.calCursor;
   const y = cur.getFullYear(), m = cur.getMonth();
   const today = new Date();
-  const monthName = cur.toLocaleDateString(
-    prefs.lang === 'en' ? 'en-US' : prefs.lang === 'es' ? 'es-ES' : prefs.lang === 'it' ? 'it-IT' : 'fr-FR',
-    { month: 'long', year: 'numeric' }
-  );
+  const locale = LOCALES[prefs.lang] || 'fr-FR';
 
   const first = new Date(y, m, 1);
   let start = first.getDay() - 1;
@@ -191,19 +243,19 @@ export default function Calendar() {
 
   return (
     <div className="view-anim">
-      <div className="cal-head">
+      <div className="cal-head" data-tour="calendar-header">
         <h2 className="page-title" style={{ margin: 0 }}>{t('calendar')}</h2>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button className="btn btn-ghost btn-sm" onClick={() => calMove(-1)}>←</button>
-          <span className="cal-month">{monthName}</span>
+          <MonthYearPicker year={y} month={m} locale={locale} onPick={(py, pm) => setUi({ calCursor: new Date(py, pm, 1) })} />
           <button className="btn btn-ghost btn-sm" onClick={() => calMove(1)}>→</button>
           <button className="btn btn-ghost btn-sm" onClick={calToday}>{t('today')}</button>
           {canEditCal && <button className="btn btn-primary btn-sm" onClick={() => openNewEventModal()}>+ {t('newEvent')}</button>}
         </div>
       </div>
       <div className="home-cols">
-        <div style={{ flex: 2.5, minWidth: 340 }}><div className="cal-grid">{cells}</div></div>
-        <div className="card" style={{ flex: 1, minWidth: 220 }}>
+        <div style={{ flex: 2.5, minWidth: 340 }}><div className="cal-grid" data-tour="calendar-grid">{cells}</div></div>
+        <div className="card" style={{ flex: 1, minWidth: 220 }} data-tour="calendar-upcoming">
           <div className="section-label">{t('upcomingEvents')}</div>
           {upcoming.map(e => (
             <div className="task-row" style={{ cursor: 'pointer' }} key={e.id} onClick={() => showEvent(e.id)}>

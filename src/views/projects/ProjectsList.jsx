@@ -55,7 +55,7 @@ export default function ProjectsList({ onOpenProject }) {
 
   return (
     <div className="view-anim">
-      <div className="proj-head">
+      <div className="proj-head" data-tour="projects-header">
         <div>
           <div className="proj-head-title">
             <Icon name="boards" />
@@ -70,7 +70,7 @@ export default function ProjectsList({ onOpenProject }) {
         </button>
       </div>
 
-      <div className="proj-tabs">
+      <div className="proj-tabs" data-tour="projects-tabs">
         {tabs.map(([key, label, count]) => (
           <button key={key} className={`proj-tab${ui.projectsTab === key ? ' active' : ''}`} onClick={() => setUi({ projectsTab: key })}>
             {label} <span className="count">{count}</span>
@@ -78,7 +78,7 @@ export default function ProjectsList({ onOpenProject }) {
         ))}
       </div>
 
-      <div className="proj-toolbar">
+      <div className="proj-toolbar" data-tour="projects-toolbar">
         <div className="proj-search">
           <Icon name="search" />
           <input placeholder={t('searchProjects')} value={query} onChange={e => setQuery(e.target.value)} />
@@ -102,7 +102,7 @@ export default function ProjectsList({ onOpenProject }) {
       <div className="proj-count-line">{filtered.length} / {counts.all} {t('projects').toLowerCase()}</div>
 
       {filtered.length ? (
-        <div className="proj-grid">
+        <div className="proj-grid" data-tour="projects-grid">
           {filtered.map(({ p, status }) => {
             const cards = allCards(p);
             return (

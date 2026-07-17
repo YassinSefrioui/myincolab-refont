@@ -8,6 +8,8 @@ import SearchPanel from './components/SearchPanel.jsx';
 import AIPanel from './components/AIPanel.jsx';
 import ModalRoot from './components/Modal.jsx';
 import ToastRoot from './components/ToastRoot.jsx';
+import CallIsland from './components/CallIsland.jsx';
+import TourOverlay from './components/TourOverlay.jsx';
 import Auth from './views/Auth.jsx';
 import Home from './views/Home.jsx';
 import Projects from './views/Projects.jsx';
@@ -85,6 +87,8 @@ export default function App() {
       <AIPanel />
       <ModalRoot />
       <ToastRoot />
+      <CallIsland />
+      <TourOverlay />
     </>
   );
 }

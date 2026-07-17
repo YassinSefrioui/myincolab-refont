@@ -18,16 +18,16 @@ function MeetLobby({ db, user, onJoinEvent, onInstant, onSchedule, onEdit, t }) 
   const canMeet = hasGuestExecute(user, 'meet');
   return (
     <div className="view-anim">
-      <div className="boards-head">
+      <div className="boards-head" data-tour="meet-header">
         <h2 className="page-title" style={{ margin: 0 }}>{t('meet')}</h2>
         {canMeet && (
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8 }} data-tour="meet-actions">
             <button className="btn btn-ghost btn-sm" onClick={onSchedule}>+ {t('scheduleMeeting')}</button>
             <button className="btn btn-primary btn-sm" onClick={onInstant}>+ {t('startInstantMeeting')}</button>
           </div>
         )}
       </div>
-      <div className="card">
+      <div className="card" data-tour="meet-upcoming">
         <div className="section-label">{t('upcomingMeetings')}</div>
         {upcoming.length ? upcoming.map(e => {
           const isHost = e.hostIds.includes(user.id);
@@ -83,15 +83,16 @@ function NewInstantMeetingModal({ onStart }) {
 function ActiveCallView({ call, onLeave }) {
   const { db, user, ui, setUi, toast, t } = useApp();
 
-  const [elapsed, setElapsed] = useState(0);
+  const [now, setNow] = useState(Date.now());
   const [speakingId, setSpeakingId] = useState(null);
   const [shareOn, setShareOn] = useState(false);
   const [extras, setExtras] = useState([]);
 
   const everyone = [...call.participants, ...extras];
+  const elapsed = Math.max(0, Math.floor((now - call.startedAt) / 1000));
 
   useEffect(() => {
-    const id = setInterval(() => setElapsed(e => e + 1), 1000);
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -218,16 +219,15 @@ function ActiveCallView({ call, onLeave }) {
 }
 
 export default function Meet() {
-  const { db, user, ui, setUi, openModal, t } = useApp();
-  const [activeCall, setActiveCall] = useState(null);
+  const { db, user, ui, setUi, openModal, meetCall, startMeetCall, endMeetCall, t } = useApp();
 
   function startCallFromEvent(e) {
     const participants = [...new Set([user.id, ...e.with])].map(id => ({ id, camOn: true, speaking: false }));
-    setActiveCall({ title: e.title, participants });
+    startMeetCall({ title: e.title, participants });
   }
   function startInstantMeeting(memberIds = []) {
     const participants = [...new Set([user.id, ...memberIds])].map(id => ({ id, camOn: true, speaking: false }));
-    setActiveCall({ title: t('instantMeeting'), participants });
+    startMeetCall({ title: t('instantMeeting'), participants });
   }
   function openInstantMeetingModal() {
     openModal(<NewInstantMeetingModal onStart={startInstantMeeting} />, { wide: true });
@@ -247,8 +247,8 @@ export default function Meet() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ui.joinEventId]);
 
-  if (activeCall) {
-    return <ActiveCallView call={activeCall} onLeave={() => setActiveCall(null)} />;
+  if (meetCall) {
+    return <ActiveCallView call={meetCall} onLeave={endMeetCall} />;
   }
   return <MeetLobby db={db} user={user} onJoinEvent={startCallFromEvent} onInstant={openInstantMeetingModal} onSchedule={openScheduleModal} onEdit={openEditModal} t={t} />;
 }

@@ -68,6 +68,12 @@ function migrateDB(db) {
     if (!Array.isArray(e.hostIds)) e.hostIds = [e.hostId || 'you'];
     delete e.hostId;
   });
+  (db.groupChats || []).forEach(g => {
+    if (!Array.isArray(g.adminIds) || !g.adminIds.length) g.adminIds = g.members.length ? [g.members[0]] : [];
+  });
+  db.projects.forEach(p => {
+    if (!p.leadId || !p.members.includes(p.leadId)) p.leadId = p.members[0] || null;
+  });
   (db.guestCodes || []).forEach(g => {
     if (!g.permissions) {
       const name = [g.firstName, g.lastName].filter(Boolean).join(' ');
@@ -129,11 +135,24 @@ export function AppProvider({ children }) {
   });
   const setUi = useCallback(patch => setUiState(prev => ({ ...prev, ...(typeof patch === 'function' ? patch(prev) : patch) })), []);
 
-  const [modal, setModal] = useState(null);
+  const [modalStack, setModalStack] = useState([]);
   const [toasts, setToasts] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiHistory, setAiHistory] = useState([]);
+
+  // Visite guidée interactive (spotlight) — voir components/TourOverlay.jsx.
+  const [tourKey, setTourKey] = useState(null);
+  const startTour = useCallback(key => setTourKey(key), []);
+  const endTour = useCallback(() => setTourKey(null), []);
+
+  // Appels persistants — restent actifs quand on change de conversation ou de page.
+  const [chatCall, setChatCall] = useState(null); // { convId, type, startedAt }
+  const [meetCall, setMeetCall] = useState(null); // { title, participants, startedAt }
+  const startChatCall = useCallback((convId, type) => setChatCall({ convId, type, startedAt: Date.now() }), []);
+  const endChatCall = useCallback(() => setChatCall(null), []);
+  const startMeetCall = useCallback(payload => setMeetCall({ ...payload, startedAt: Date.now() }), []);
+  const endMeetCall = useCallback(() => setMeetCall(null), []);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', prefs.theme);
@@ -178,8 +197,12 @@ export function AppProvider({ children }) {
     setTimeout(() => setToasts(prev => prev.filter(x => x.id !== id)), 2400);
   }, []);
 
-  const openModal = useCallback((content, opts = {}) => setModal({ content, wide: !!opts.wide }), []);
-  const closeModal = useCallback(() => setModal(null), []);
+  // Pile de modales : ouvrir une modale depuis une autre (ex. profil membre depuis les infos
+  // d'une conversation) l'empile ; la fermer révèle la précédente au lieu de tout fermer.
+  const openModal = useCallback((content, opts = {}) => setModalStack(stack => [...stack, { content, wide: !!opts.wide }]), []);
+  const closeModal = useCallback(() => setModalStack(stack => stack.slice(0, -1)), []);
+  const closeAllModals = useCallback(() => setModalStack([]), []);
+  const modal = modalStack.length ? modalStack[modalStack.length - 1] : null;
 
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') closeModal(); }
@@ -208,10 +231,11 @@ export function AppProvider({ children }) {
 
   const go = useCallback(view => {
     setUi({ view });
-    closeModal();
+    closeAllModals();
     setNotifOpen(false);
+    setTourKey(null);
     setUi(prev => ({ ...prev, searchQuery: '' }));
-  }, [setUi, closeModal]);
+  }, [setUi, closeAllModals]);
 
   const setLang = useCallback(lang => setPrefs(p => ({ ...p, lang })), []);
   const setTheme = useCallback(theme => setPrefs(p => ({ ...p, theme })), []);
@@ -236,6 +260,9 @@ export function AppProvider({ children }) {
     setUser(null);
     setNotifOpen(false);
     setAiOpen(false);
+    setChatCall(null);
+    setMeetCall(null);
+    setModalStack([]);
   }, []);
 
   // Simulated presence, mirrors original 25s interval
@@ -260,12 +287,15 @@ export function AppProvider({ children }) {
     ui, setUi, go,
     t,
     toast, toasts,
-    modal, openModal, closeModal,
+    modal, openModal, closeModal, closeAllModals,
     notifOpen, setNotifOpen,
     aiOpen, setAiOpen, aiHistory, setAiHistory,
     logAudit, logActivity, notify,
+    chatCall, startChatCall, endChatCall,
+    meetCall, startMeetCall, endMeetCall,
+    tourKey, startTour, endTour,
     booted,
-  }), [db, updateDB, prefs, setLang, setTheme, setFontSize, toggleTheme, toggleHomeWidget, setHomeTasksLimit, user, startSession, logout, ui, setUi, go, t, toast, toasts, modal, openModal, closeModal, notifOpen, aiOpen, aiHistory, logAudit, logActivity, notify, booted]);
+  }), [db, updateDB, prefs, setLang, setTheme, setFontSize, toggleTheme, toggleHomeWidget, setHomeTasksLimit, user, startSession, logout, ui, setUi, go, t, toast, toasts, modal, openModal, closeModal, closeAllModals, notifOpen, aiOpen, aiHistory, logAudit, logActivity, notify, chatCall, startChatCall, endChatCall, meetCall, startMeetCall, endMeetCall, tourKey, startTour, endTour, booted]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

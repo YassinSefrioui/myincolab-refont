@@ -120,14 +120,16 @@ export default function Home() {
   return (
     <div className="view-anim">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-        <div>
+        <div data-tour="home-greeting">
           <h1 className="home-greeting">{greet}, {firstName}</h1>
           <p className="home-sub">{t('homeSub')}</p>
         </div>
-        <CustomizeMenu widgets={widgets} onToggle={toggleHomeWidget} tasksLimit={tasksLimit} onTasksLimit={setHomeTasksLimit} t={t} />
+        <div data-tour="home-customize">
+          <CustomizeMenu widgets={widgets} onToggle={toggleHomeWidget} tasksLimit={tasksLimit} onTasksLimit={setHomeTasksLimit} t={t} />
+        </div>
       </div>
 
-      <div className="stats-row">
+      <div className="stats-row" data-tour="home-stats">
         <div className="card stat-card" onClick={() => go('projects')}>
           <div className="stat-value">{dueToday}</div><div className="stat-label">{t('tasksDueToday')}</div>
         </div>
@@ -143,7 +145,7 @@ export default function Home() {
       </div>
 
       <div className="home-cols">
-        <div className="card home-left">
+        <div className="card home-left" data-tour="home-tasks">
           {widgets.myTasks !== false && (
           <>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{t('myTasks')}</div>
@@ -180,7 +182,7 @@ export default function Home() {
         </div>
         <div className="home-right">
           {widgets.nextMeeting !== false && (
-          <div className="card">
+          <div className="card" data-tour="home-next-meeting">
             <div className="section-label">{t('nextMeeting')}</div>
             <div style={{ fontSize: 14, fontWeight: 700 }}>{nextEvt ? nextEvt.title : '—'}</div>
             <div style={{ fontSize: 12, color: 'var(--text-2)', margin: '3px 0 10px' }}>

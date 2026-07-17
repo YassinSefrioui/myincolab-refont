@@ -5,13 +5,12 @@ import DueTag from '../../components/DueTag.jsx';
 import Icon from '../../components/Icon.jsx';
 import PrioBadge from '../../components/PrioBadge.jsx';
 import MemberPicker from '../../components/MemberPicker.jsx';
-import MemberProfileModal from '../../components/MemberProfileModal.jsx';
 import DatePicker from '../../components/DatePicker.jsx';
 import { useApp } from '../../state/AppContext.jsx';
 import { findCard, labelColor, member, nowTime } from '../../lib/helpers.js';
 
 export default function TaskModal({ cardId }) {
-  const { db, updateDB, user, closeModal, logActivity, toast, openModal, t } = useApp();
+  const { db, updateDB, user, closeModal, logActivity, toast, t } = useApp();
   const [newSub, setNewSub] = useState('');
   const [newComment, setNewComment] = useState('');
 
@@ -138,7 +137,7 @@ export default function TaskModal({ cardId }) {
           <div style={{ display: 'flex', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-lt)' }} key={i}>
             <Avatar m={member(db, c.user)} size="a20" />
             <div style={{ minWidth: 0 }}>
-              <span className="name-link" style={{ fontSize: 11.5, fontWeight: 700 }} onClick={() => openModal(<MemberProfileModal memberId={c.user} />)}>{member(db, c.user).name}</span>
+              <span style={{ fontSize: 11.5, fontWeight: 700 }}>{member(db, c.user).name}</span>
               <span style={{ fontSize: 10, color: 'var(--muted)', marginLeft: 6 }}>{c.time}</span>
               <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{c.text}</div>
             </div>

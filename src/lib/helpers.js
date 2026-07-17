@@ -105,6 +105,16 @@ export function fileKind(name) {
   return FILE_KINDS[ext] || { icon: 'files', color: 'var(--muted)' };
 }
 
+const IMAGE_EXTS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp']);
+const VIDEO_EXTS = new Set(['mp4', 'mov', 'webm', 'avi', 'mkv']);
+/** Classe une pièce jointe en 'image' | 'video' | 'document' d'après son extension. */
+export function mediaKind(name) {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if (IMAGE_EXTS.has(ext)) return 'image';
+  if (VIDEO_EXTS.has(ext)) return 'video';
+  return 'document';
+}
+
 /** Libellé + tonalité du compte à rebours d'échéance. */
 export function dueInfo(due, t) {
   const n = daysLeft(due);

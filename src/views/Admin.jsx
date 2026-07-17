@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import Avatar from '../components/Avatar.jsx';
-import MemberProfileModal from '../components/MemberProfileModal.jsx';
 import { ModalHeader } from '../components/Modal.jsx';
 import { allCards, departmentName, GUEST_PERMISSION_KEYS, member, projectOverdueCount, projectProgress } from '../lib/helpers.js';
 import { useApp } from '../state/AppContext.jsx';
@@ -147,7 +146,7 @@ function AdminDashboard({ db, openModal, setUi, updateDB, user, toast, t }) {
   return (
     <>
       <h2 className="page-title">{t('adminDashboard')}</h2>
-      <div className="admin-grid">
+      <div className="admin-grid" data-tour="admin-stats">
         <div className="card"><div className="stat-value">{db.team.filter(m => !m.locked).length}</div><div className="stat-label">{t('activeUsers')}</div></div>
         <div className="card"><div className="stat-value">{activeProjects.length}</div><div className="stat-label">{t('activeProjects')}</div></div>
         <div className="card"><div className="stat-value">{tasks}</div><div className="stat-label">{t('activeTasks')}</div></div>
@@ -156,7 +155,7 @@ function AdminDashboard({ db, openModal, setUi, updateDB, user, toast, t }) {
         <div className="card"><div className="stat-value">{avgProgress}%</div><div className="stat-label">{t('avgProgress')}</div></div>
       </div>
 
-      <div className="card" style={{ marginBottom: 16 }}>
+      <div className="card" style={{ marginBottom: 16 }} data-tour="admin-quickactions">
         <div className="section-label">{t('quickActions')}</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="btn btn-primary btn-sm" onClick={() => openModal(<NewUserModal />)}>+ {t('newUser')}</button>
@@ -166,7 +165,7 @@ function AdminDashboard({ db, openModal, setUi, updateDB, user, toast, t }) {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: 16 }}>
+      <div className="card" style={{ marginBottom: 16 }} data-tour="admin-projects-overview">
         <div className="section-label">{t('projectsOverview')}</div>
         {activeProjects.map(p => {
           const pct = projectProgress(p);
@@ -228,7 +227,7 @@ function AdminUsers({ db, updateDB, user, openModal, t }) {
               <tr key={m.id}>
                 <td>
                   <Avatar m={m} size="a20" withPresence />{' '}
-                  <span className="name-link" onClick={() => openModal(<MemberProfileModal memberId={m.id} />)}>{m.name}</span>
+                  <span>{m.name}</span>
                 </td>
                 <td>
                   <select
@@ -576,7 +575,7 @@ function AdminLocked({ db, updateDB, openModal, t }) {
               <Avatar m={m} size="a30" />
               <div className="file-main">
                 <div className="file-name">
-                  <span className="name-link" onClick={() => openModal(<MemberProfileModal memberId={m.id} />)}>{m.name}</span>
+                  <span>{m.name}</span>
                 </div>
                 <div className="file-meta">{m.email}</div>
               </div>
@@ -611,7 +610,7 @@ export default function Admin() {
 
   return (
     <div className="view-anim">
-      <div className="tabs">
+      <div className="tabs" data-tour="admin-tabs">
         {tabs.map(([k, lbl]) => (
           <button key={k} className={`tab${ui.adminTab === k ? ' active' : ''}`} onClick={() => setUi({ adminTab: k })}>{lbl}</button>
         ))}

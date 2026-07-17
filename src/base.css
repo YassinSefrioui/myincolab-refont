@@ -803,6 +803,8 @@ button { font-family: var(--font); }
   flex-shrink: 0;
 }
 .chat-title { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chat-title.clickable { cursor: pointer; border-radius: 8px; padding: 2px 6px; margin: -2px -6px; transition: background .15s ease; }
+.chat-title.clickable:hover { background: var(--accent-soft); }
 .chat-scroll {
   flex: 1;
   overflow-y: auto;
@@ -1050,7 +1052,6 @@ button { font-family: var(--font); }
    Calendrier
    ============================================================ */
 .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
-.cal-month { font-size: 16px; font-weight: 700; text-transform: capitalize; }
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -1800,3 +1801,258 @@ button { font-family: var(--font); }
   color: var(--muted); margin: 18px 0 2px;
 }
 .guest-section-label:first-child { margin-top: 0; }
+
+/* ---------- Bulle d'appel persistante (style Dynamic Island) ---------- */
+.call-island-stack {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.call-island {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0b0b0f;
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 8px 8px 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 255, 255, .06);
+  cursor: pointer;
+  animation: islandIn .28s cubic-bezier(.2, 1, .3, 1);
+  max-width: 320px;
+  transition: background .22s ease, transform .22s cubic-bezier(.2, 1, .3, 1);
+}
+.call-island:hover { background: #1a1a20; transform: scale(1.03); }
+.call-island-hover-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-width .26s cubic-bezier(.2, 1, .3, 1), opacity .18s ease, margin .26s ease;
+}
+.call-island:hover .call-island-hover-controls { max-width: 90px; opacity: 1; margin-left: 2px; }
+.call-island-ctl {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .12s ease, transform .12s ease;
+}
+.call-island-ctl:hover { background: rgba(255, 255, 255, .26); transform: scale(1.08); }
+.call-island-ctl.off { background: var(--danger); }
+.call-island-ctl.off:hover { background: var(--danger); filter: brightness(1.15); }
+.call-island-ctl svg { width: 12px; height: 12px; }
+.call-island-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+  animation: islandPulse 1.6s ease-out infinite;
+}
+.call-island-icon { display: flex; color: #fff; flex-shrink: 0; }
+.call-island-icon svg { width: 13px; height: 13px; }
+.call-island-label {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+.call-island-timer {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .55);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.call-island-end {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--danger);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform .12s ease;
+}
+.call-island-end:hover { transform: scale(1.08); }
+.call-island-end svg { width: 11px; height: 11px; }
+
+@keyframes islandIn {
+  from { opacity: 0; transform: translateY(-10px) scale(.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes islandPulse {
+  0% { box-shadow: 0 0 0 0 rgba(75, 179, 122, .55); }
+  70% { box-shadow: 0 0 0 6px rgba(75, 179, 122, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(75, 179, 122, 0); }
+}
+
+/* ---------- Infos de conversation (façon WhatsApp) ---------- */
+.conv-info-head { display: flex; align-items: center; gap: 14px; margin: 4px 0 16px; }
+.conv-info-icon {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.conv-info-icon svg { width: 22px; height: 22px; }
+.conv-info-icon.group { background: var(--accent-soft); color: var(--accent); }
+.conv-info-icon.proj { background: rgba(240, 160, 75, .18); color: #d18334; }
+.conv-info-title {
+  font-size: 16px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.conv-info-title.editable { cursor: pointer; }
+.conv-info-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.conv-info-overview { display: flex; flex-direction: column; }
+.conv-info-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.conv-info-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+}
+.conv-info-media-tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-lt);
+  border-radius: 10px;
+  padding: 14px 6px;
+  cursor: pointer;
+  color: var(--text-2);
+  transition: background .15s ease;
+}
+.conv-info-media-tile:hover { background: var(--accent-soft); color: var(--accent); }
+.conv-info-media-tile svg { width: 22px; height: 22px; }
+.conv-info-media-tile span {
+  font-size: 10px; font-weight: 600; text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+}
+
+/* ---------- Sélecteur mois/année rapide (en-tête du calendrier) ---------- */
+.cmp-wrap { position: relative; display: inline-flex; }
+.cal-month-trigger {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  text-transform: capitalize;
+  color: var(--text) !important;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.cal-month-trigger svg { flex-shrink: 0; }
+.cmp-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 95;
+  width: 240px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-pop);
+  padding: 12px;
+  animation: viewIn .15s ease;
+}
+.cmp-year-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px; }
+.cmp-nav {
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cmp-nav svg { width: 11px; height: 11px; }
+.cmp-nav:hover { background: var(--accent-soft); color: var(--accent); }
+.cmp-year-input {
+  width: 76px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border-lt);
+  border-radius: 7px;
+  padding: 5px 4px;
+  -moz-appearance: textfield;
+}
+.cmp-year-input::-webkit-outer-spin-button, .cmp-year-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.cmp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.cmp-cell {
+  padding: 8px 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: capitalize;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.cmp-cell:hover { background: var(--accent-soft); }
+.cmp-cell.selected { background: var(--accent); color: var(--accent-contrast); font-weight: 700; }
+
+/* ---------- Visite guidée interactive (spotlight) ---------- */
+.tour-mask {
+  position: fixed;
+  background: rgba(10, 10, 14, .68);
+  z-index: 300;
+  transition: all .22s ease;
+}
+.tour-spot {
+  position: fixed;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, .18), 0 8px 28px rgba(0, 0, 0, .35);
+  z-index: 300;
+  transition: all .22s ease;
+  pointer-events: none;
+}
+.tour-tooltip {
+  position: fixed;
+  z-index: 301;
+  background: var(--surface);
+  border: 1px solid var(--border-lt);
+  border-radius: 14px;
+  box-shadow: var(--shadow-pop);
+  padding: 14px;
+  overflow-y: auto;
+  animation: viewIn .18s ease;
+}
+.tour-tooltip-step {
+  font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 6px;
+}
+.tour-tooltip-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+.tour-tooltip-body { font-size: 12.5px; line-height: 1.5; color: var(--text-2); margin-bottom: 12px; }
+.tour-tooltip-actions { display: flex; align-items: center; gap: 6px; }

@@ -8,7 +8,10 @@ export default function NewProjectModal({ onCreated }) {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
   const [members, setMembers] = useState([user.id]);
+  const [leadId, setLeadId] = useState(user.id);
   const [templateId, setTemplateId] = useState(null);
+
+  const leadCandidates = [user, ...members.filter(id => id !== user.id).map(id => db.team.find(m => m.id === id))].filter(Boolean);
 
   function pickTemplate(id) {
     setTemplateId(id);
@@ -29,10 +32,12 @@ export default function NewProjectModal({ onCreated }) {
           priority: 'MEDIUM', comments: [], subtasks: [], deps: [], done: false,
         }))
       : [];
+    const finalMembers = members.length ? members : [user.id];
+    const finalLead = finalMembers.includes(leadId) ? leadId : (finalMembers.includes(user.id) ? user.id : finalMembers[0]);
     updateDB(draft => {
       draft.projects.push({
         id, name: trimmed, archived: false, description: desc.trim(),
-        members: members.length ? members : [user.id],
+        members: finalMembers, leadId: finalLead,
         columns: [
           { id: 'backlog', title: 'Backlog', cards: backlogCards },
           { id: 'progress', title: 'In Progress', cards: [] },
@@ -68,6 +73,8 @@ export default function NewProjectModal({ onCreated }) {
       <textarea className="textarea" value={desc} onChange={e => setDesc(e.target.value)} />
       <label className="field-label">{t('members')}</label>
       <MemberPicker candidates={db.team.filter(m => !m.locked)} selected={members} onChange={setMembers} />
+      <label className="field-label">{t('projectLead')}</label>
+      <MemberPicker candidates={leadCandidates} selected={leadId} onChange={id => setLeadId(id || user.id)} multi={false} placeholder={t('projectLead')} />
 
       <div className="modal-foot">
         <button className="btn btn-ghost" onClick={closeModal}>{t('cancel')}</button>

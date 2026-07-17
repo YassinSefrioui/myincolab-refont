@@ -138,7 +138,7 @@ export default function Files() {
 
   return (
     <div className="view-anim">
-      <div className="boards-head">
+      <div className="boards-head" data-tour="files-header">
         <h2 className="page-title" style={{ margin: 0 }}>{t('files')}</h2>
         {hasGuestExecute(user, 'files') && (
           <div style={{ display: 'flex', gap: 8 }}>
@@ -148,7 +148,7 @@ export default function Files() {
           </div>
         )}
       </div>
-      <div className="tabs">
+      <div className="tabs" data-tour="files-tabs">
         {tabs.map(([k, lbl]) => (
           <button key={k} className={`tab${ui.filesTab === k ? ' active' : ''}`} onClick={() => setFilesTab(k)}>{lbl}</button>
         ))}
@@ -162,7 +162,7 @@ export default function Files() {
         ))}
       </div>
 
-      <div className="proj-toolbar">
+      <div className="proj-toolbar" data-tour="files-toolbar">
         <div className="proj-search">
           <Icon name="search" />
           <input placeholder={t('searchFiles')} value={query} onChange={e => setQuery(e.target.value)} />
@@ -213,7 +213,7 @@ export default function Files() {
         )}
       </div>
 
-      <div className="files-list">
+      <div className="files-list" data-tour="files-list">
         {folders.map(f => (
           <div className="file-row" key={f.id} onClick={() => openFolder(f.id)}>
             <span style={{ width: 26, height: 20, color: 'var(--warning)', display: 'inline-flex', flexShrink: 0 }}><Icon name="folder" /></span>

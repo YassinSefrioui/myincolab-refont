@@ -4,7 +4,6 @@ import Avatar from '../../components/Avatar.jsx';
 import DueTag from '../../components/DueTag.jsx';
 import PrioBadge from '../../components/PrioBadge.jsx';
 import MemberPicker from '../../components/MemberPicker.jsx';
-import MemberProfileModal from '../../components/MemberProfileModal.jsx';
 import ProjectMenu from './ProjectMenu.jsx';
 import ProjectSwitcher from './ProjectSwitcher.jsx';
 import NewTaskModal from './NewTaskModal.jsx';
@@ -113,7 +112,7 @@ function ProjectFilesTab({ p }) {
 }
 
 function ProjectDecisionsTab({ p }) {
-  const { db, updateDB, user, prefs, logActivity, openModal, t } = useApp();
+  const { db, updateDB, user, prefs, logActivity, t } = useApp();
   const [text, setText] = useState('');
   const decisions = p.decisions || [];
 
@@ -154,7 +153,7 @@ function ProjectDecisionsTab({ p }) {
               <div className="decision-body">
                 <div className="decision-title">{d.text}</div>
                 <div className="decision-meta">
-                  <span className="name-link" onClick={() => openModal(<MemberProfileModal memberId={m.id} />)}>{m.name}</span> · {fmtDate(d.date, prefs.lang)}
+                  <span>{m.name}</span> · {fmtDate(d.date, prefs.lang)}
                 </div>
               </div>
               <button className="decision-del" title={t('delete')} onClick={() => deleteDecision(d.id)}>
@@ -169,7 +168,7 @@ function ProjectDecisionsTab({ p }) {
 }
 
 function ProjectMembersTab({ p }) {
-  const { db, updateDB, user, logActivity, toast, openModal, t } = useApp();
+  const { db, updateDB, user, logActivity, toast, t } = useApp();
   const candidates = db.team.filter(m => !p.members.includes(m.id) && !m.locked);
 
   function addMember(id) {
@@ -204,7 +203,7 @@ function ProjectMembersTab({ p }) {
               <Avatar m={m} size="a30" withPresence />
               <div className="decision-body">
                 <div className="decision-title">
-                  <span className="name-link" onClick={() => openModal(<MemberProfileModal memberId={id} />)}>{m.name}</span>{' '}
+                  <span>{m.name}</span>{' '}
                   {m.role && <span className={`role-badge role-${m.role}`}>{m.role}</span>}
                 </div>
                 <div className="decision-meta">{[departmentName(db, m.departmentId), m.email].filter(Boolean).join(' · ')}</div>

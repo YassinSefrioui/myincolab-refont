@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Icon from '../../components/Icon.jsx';
 import Avatar from '../../components/Avatar.jsx';
-import MemberProfileModal from '../../components/MemberProfileModal.jsx';
+import ConvInfoModal from '../../components/ConvInfoModal.jsx';
 import CallPanel from './CallPanel.jsx';
 import { convLabel, hasGuestExecute, markConvRead, member, nextId, nowTime, QUICK_REACTIONS } from '../../lib/helpers.js';
 import { useApp } from '../../state/AppContext.jsx';
@@ -14,10 +14,9 @@ const REPLY_POOL = [
 ];
 
 export default function Messages() {
-  const { db, updateDB, user, prefs, ui, toast, openModal, t } = useApp();
+  const { db, updateDB, user, prefs, ui, toast, openModal, chatCall, startChatCall, endChatCall, t } = useApp();
   const [input, setInput] = useState('');
   const [summary, setSummary] = useState(null);
-  const [call, setCall] = useState(null);
   const [typingNote, setTypingNote] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
   const [openMarker, setOpenMarker] = useState(0);
@@ -29,6 +28,7 @@ export default function Messages() {
   const convId = ui.activeConvId;
   const msgs = db.messagesByConv[convId] || [];
   const label = convLabel(db, convId);
+  const call = chatCall && chatCall.convId === convId ? chatCall : null;
 
   const uiRef = useRef(ui);
   uiRef.current = ui;
@@ -37,7 +37,7 @@ export default function Messages() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [msgs.length, convId]);
 
-  useEffect(() => { setSummary(null); setReplyingTo(null); setCall(null); }, [convId]);
+  useEffect(() => { setSummary(null); setReplyingTo(null); }, [convId]);
   useEffect(() => () => { if (replyTimer.current) clearTimeout(replyTimer.current); }, []);
 
   // Capture les messages non lus au moment de l'ouverture (avant de marquer comme lu),
@@ -130,19 +130,22 @@ export default function Messages() {
   return (
     <div className="chat-view view-anim">
       <div className="chat-head">
-        <div className="chat-title">{label}</div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="chat-title clickable" onClick={() => openModal(<ConvInfoModal convId={convId} />, { wide: true })} title={t('conversationInfo')}>
+          {label}
+          <Icon name="chevron" style={{ width: 11, height: 11, opacity: .45, transform: 'rotate(-90deg)' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 8 }} data-tour="messages-calls">
           <button
             className={`btn btn-ghost btn-sm${call?.type === 'audio' ? ' active' : ''}`}
             title={t('audioCall')}
-            onClick={() => setCall(c => (c?.type === 'audio' ? null : { type: 'audio' }))}
+            onClick={() => (call?.type === 'audio' ? endChatCall() : startChatCall(convId, 'audio'))}
           >
             <Icon name="phone" style={{ width: 12, height: 12 }} /> {t('audioCall')}
           </button>
           <button
             className={`btn btn-ghost btn-sm${call?.type === 'video' ? ' active' : ''}`}
             title={t('videoCall')}
-            onClick={() => setCall(c => (c?.type === 'video' ? null : { type: 'video' }))}
+            onClick={() => (call?.type === 'video' ? endChatCall() : startChatCall(convId, 'video'))}
           >
             <Icon name="cam" style={{ width: 12, height: 12 }} /> {t('videoCall')}
           </button>
@@ -151,7 +154,7 @@ export default function Messages() {
           </button>
         </div>
       </div>
-      {call && <CallPanel key={call.type} convId={convId} type={call.type} onEnd={() => setCall(null)} />}
+      {call && <CallPanel key={call.type} convId={convId} type={call.type} startedAt={call.startedAt} onEnd={endChatCall} />}
       <div id="ai-summary-slot">
         {summary === 'loading' && (
           <div className="ai-summary-box">⏳ {prefs.lang === 'en' ? 'Analyzing conversation…' : 'Analyse de la conversation…'}</div>
@@ -180,7 +183,7 @@ export default function Messages() {
                 <div style={{ minWidth: 0, flex: 1 }}>
                   {!continued && (
                     <div className="msg-head">
-                      <span className="msg-name name-link" onClick={() => openModal(<MemberProfileModal memberId={u.id} />)}>{u.name}</span>
+                      <span className="msg-name">{u.name}</span>
                       <span className="msg-time">{m.time}</span>
                     </div>
                   )}

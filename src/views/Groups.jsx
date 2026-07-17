@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Avatar from '../components/Avatar.jsx';
 import { ModalHeader } from '../components/Modal.jsx';
 import MemberPicker from '../components/MemberPicker.jsx';
-import MemberProfileModal from '../components/MemberProfileModal.jsx';
 import { hasGuestExecute, member } from '../lib/helpers.js';
 import { useApp } from '../state/AppContext.jsx';
 
@@ -61,20 +60,20 @@ function AddMemberModal({ groupId }) {
   );
 }
 
-function GroupCard({ g, db, updateDB, openModal, t, onOpenProfile, canEdit }) {
+function GroupCard({ g, db, updateDB, openModal, t, canEdit }) {
   const children = db.groups.filter(x => x.parent === g.id);
   function removeMember(userId) {
     updateDB(draft => { const dg = draft.groups.find(x => x.id === g.id); dg.members = dg.members.filter(id => id !== userId); });
   }
   return (
-    <div className="card group-card">
+    <div className="card group-card" data-tour="groups-list">
       <div className="group-head">
         <div style={{ fontSize: 13.5, fontWeight: 700 }}>
           {g.name}
           <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 400, marginLeft: 6 }}>{g.members.length} {t('members').toLowerCase()}</span>
         </div>
         {canEdit && (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6 }} data-tour="groups-manage">
             <button className="btn btn-ghost btn-sm" onClick={() => openModal(<AddMemberModal groupId={g.id} />, { wide: true })}>+ {t('addMember')}</button>
             <button className="btn btn-ghost btn-sm" onClick={() => openModal(<NewGroupModal parentId={g.id} />)}>+ {t('addSubgroup')}</button>
           </div>
@@ -84,14 +83,14 @@ function GroupCard({ g, db, updateDB, openModal, t, onOpenProfile, canEdit }) {
         {g.members.map(id => (
           <span className="member-chip" key={id}>
             <Avatar m={member(db, id)} size="a20" withPresence />
-            <span className="name-link" onClick={() => onOpenProfile(id)}>{member(db, id).name}</span>
+            <span>{member(db, id).name}</span>
             {canEdit && <span style={{ cursor: 'pointer', color: 'var(--muted)' }} onClick={() => removeMember(id)} title={t('delete')}>✕</span>}
           </span>
         ))}
       </div>
       {children.length > 0 && (
         <div className="subgroup-wrap">
-          {children.map(c => <GroupCard key={c.id} g={c} db={db} updateDB={updateDB} openModal={openModal} t={t} onOpenProfile={onOpenProfile} canEdit={canEdit} />)}
+          {children.map(c => <GroupCard key={c.id} g={c} db={db} updateDB={updateDB} openModal={openModal} t={t} canEdit={canEdit} />)}
         </div>
       )}
     </div>
@@ -102,14 +101,13 @@ export default function Groups() {
   const { db, user, updateDB, openModal, t } = useApp();
   const roots = db.groups.filter(g => !g.parent);
   const canEdit = hasGuestExecute(user, 'groups');
-  function onOpenProfile(id) { openModal(<MemberProfileModal memberId={id} />); }
   return (
     <div className="view-anim">
-      <div className="boards-head">
+      <div className="boards-head" data-tour="groups-header">
         <h2 className="page-title" style={{ margin: 0 }}>{t('groups')}</h2>
         {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal(<NewGroupModal parentId={null} />)}>+ {t('newGroup')}</button>}
       </div>
-      {roots.map(g => <GroupCard key={g.id} g={g} db={db} updateDB={updateDB} openModal={openModal} t={t} onOpenProfile={onOpenProfile} canEdit={canEdit} />)}
+      {roots.map(g => <GroupCard key={g.id} g={g} db={db} updateDB={updateDB} openModal={openModal} t={t} canEdit={canEdit} />)}
     </div>
   );
 }

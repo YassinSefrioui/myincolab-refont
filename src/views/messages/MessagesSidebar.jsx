@@ -2,7 +2,6 @@ import Icon from '../../components/Icon.jsx';
 import Avatar from '../../components/Avatar.jsx';
 import { ModalHeader } from '../../components/Modal.jsx';
 import MemberPicker from '../../components/MemberPicker.jsx';
-import MemberProfileModal from '../../components/MemberProfileModal.jsx';
 import { hasGuestExecute, lastMessage, member, previewText, unreadCount, visibleProjectsFor } from '../../lib/helpers.js';
 import { useApp } from '../../state/AppContext.jsx';
 import { useState } from 'react';
@@ -48,7 +47,7 @@ function NewGroupChatModal() {
     if (!trimmed || !members.length) return;
     const id = 'gc-' + Date.now();
     updateDB(draft => {
-      draft.groupChats.push({ id, name: trimmed, members: [...members, user.id] });
+      draft.groupChats.push({ id, name: trimmed, members: [...members, user.id], adminIds: [user.id] });
       draft.messagesByConv[id] = [];
     });
     closeModal();
@@ -69,8 +68,8 @@ function NewGroupChatModal() {
   );
 }
 
-function ConvRow({ active, icon, unread, name, convId, onClick, memberId }) {
-  const { db, user, openModal } = useApp();
+function ConvRow({ active, icon, unread, name, convId, onClick }) {
+  const { db, user } = useApp();
   const last = lastMessage(db, convId);
   const preview = last ? (last.user === user.id ? 'Vous : ' : '') + previewText(db, last) : '';
   return (
@@ -78,10 +77,7 @@ function ConvRow({ active, icon, unread, name, convId, onClick, memberId }) {
       {icon}
       <div className="chan-item-body">
         <div className="chan-item-top">
-          <span
-            className={`nm${memberId ? ' name-link' : ''}`}
-            onClick={memberId ? (e => { e.stopPropagation(); openModal(<MemberProfileModal memberId={memberId} />); }) : undefined}
-          >{name}</span>
+          <span className="nm">{name}</span>
           {last && <span className="chan-item-time">{last.time}</span>}
         </div>
         <div className="chan-item-preview">
@@ -126,7 +122,7 @@ export default function MessagesSidebar() {
           <ConvRow
             key={d.id} convId={d.id} active={ui.activeConvId === d.id} unread={unreadCount(db, d.id)}
             icon={<Avatar m={m} size="a20" withPresence />}
-            name={m.name} onClick={() => switchConv(d.id)} memberId={m.id}
+            name={m.name} onClick={() => switchConv(d.id)}
           />
         );
       })}

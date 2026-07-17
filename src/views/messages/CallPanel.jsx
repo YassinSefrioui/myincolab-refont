@@ -14,13 +14,12 @@ function fmtElapsed(s) {
  * Appel audio / vidéo dans une conversation privée ou un chat de groupe.
  * type: 'audio' | 'video' — la caméra n'est proposée qu'en vidéo.
  */
-export default function CallPanel({ convId, type, onEnd }) {
-  const { db, user, toast, t } = useApp();
-  const [connected, setConnected] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const [micOn, setMicOn] = useState(true);
-  const [camOn, setCamOn] = useState(type === 'video');
+export default function CallPanel({ convId, type, startedAt, onEnd }) {
+  const { db, user, ui, setUi, toast, t } = useApp();
+  const [now, setNow] = useState(Date.now());
   const [fullscreen, setFullscreen] = useState(false);
+  const micOn = ui.micOn;
+  const camOn = ui.camOn;
 
   const dm = db.dms.find(d => d.id === convId);
   const gc = db.groupChats.find(g => g.id === convId);
@@ -34,15 +33,12 @@ export default function CallPanel({ convId, type, onEnd }) {
         : [user.id];
 
   useEffect(() => {
-    const joinTimer = setTimeout(() => setConnected(true), 1600);
-    return () => clearTimeout(joinTimer);
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    if (!connected) return;
-    const id = setInterval(() => setElapsed(e => e + 1), 1000);
-    return () => clearInterval(id);
-  }, [connected]);
+  const connected = now - startedAt > 1600;
+  const elapsed = Math.max(0, Math.floor((now - startedAt) / 1000));
 
   function hangUp() {
     toast(t('callEnded'));
@@ -84,11 +80,11 @@ export default function CallPanel({ convId, type, onEnd }) {
       </div>
 
       <div className="call-controls">
-        <button className={`ctl-btn sm${micOn ? '' : ' off'}`} onClick={() => setMicOn(v => !v)} title={micOn ? t('micOn') : t('micOff')}>
+        <button className={`ctl-btn sm${micOn ? '' : ' off'}`} onClick={() => setUi({ micOn: !micOn })} title={micOn ? t('micOn') : t('micOff')}>
           <Icon name={micOn ? 'mic' : 'micOff'} />
         </button>
         {type === 'video' && (
-          <button className={`ctl-btn sm${camOn ? '' : ' off'}`} onClick={() => setCamOn(v => !v)} title={camOn ? t('camOn') : t('camOff')}>
+          <button className={`ctl-btn sm${camOn ? '' : ' off'}`} onClick={() => setUi({ camOn: !camOn })} title={camOn ? t('camOn') : t('camOff')}>
             <Icon name={camOn ? 'cam' : 'camOff'} />
           </button>
         )}
