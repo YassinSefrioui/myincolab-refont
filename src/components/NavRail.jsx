@@ -22,7 +22,7 @@ export default function NavRail() {
   const items = NAV_ITEMS.filter(it => !it.adminOnly || user.role === 'ADMIN');
   return (
     <nav id="left-nav" className="left-nav" aria-label="Navigation principale">
-      <img className="nav-logo" src="/logo.jpeg" alt="INCO LAB" onClick={() => go('home')} />
+      <img className="nav-logo" src={`${import.meta.env.BASE_URL}logo.jpeg`} alt="INCO LAB" onClick={() => go('home')} />
       {items.map(it => {
         const badge = it.badge ? it.badge(db) : 0;
         return (

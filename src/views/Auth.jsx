@@ -84,7 +84,7 @@ export default function Auth() {
       <div className="auth-screen">
         <div className="auth-card">
           <div className="auth-logo-row">
-            <img className="auth-logo" src="/logo.jpeg" alt="INCO LAB" />
+            <img className="auth-logo" src={`${import.meta.env.BASE_URL}logo.jpeg`} alt="INCO LAB" />
             <div>
               <div className="auth-name">INCO LAB</div>
               <div className="auth-tag">Boards · Chat · Files · Meet</div>
