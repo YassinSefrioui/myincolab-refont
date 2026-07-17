@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INCO LAB</title>
+  <link rel="icon" type="image/jpeg" href="assets/logo.jpeg" />
+  <link rel="stylesheet" href="css/styles.css?v=2" />
+</head>
+<body>
+  <!-- Fond dynamique (canvas animé) -->
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- Écran de connexion -->
+  <div id="auth-root"></div>
+
+  <!-- Coquille applicative (nav gauche + header + contenu) -->
+  <div id="app-root" class="app-shell" hidden>
+    <nav id="left-nav" class="left-nav" aria-label="Navigation principale"></nav>
+    <div class="app-main">
+      <header id="app-header" class="app-header"></header>
+      <div class="app-body">
+        <aside id="secondary-col" class="secondary-col" hidden></aside>
+        <main id="content" class="content" tabindex="-1"></main>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panneau notifications -->
+  <div id="notif-panel" class="notif-panel" hidden></div>
+
+  <!-- Assistant IA -->
+  <div id="ai-panel" class="ai-panel" hidden></div>
+
+  <!-- Résultats de recherche globale -->
+  <div id="search-panel" class="search-panel" hidden></div>
+
+  <!-- Modales + toasts -->
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+
+  <script src="js/i18n.js?v=2"></script>
+  <script src="js/data.js?v=2"></script>
+  <script src="js/core.js?v=2"></script>
+  <script src="js/views1.js?v=2"></script>
+  <script src="js/views2.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
+</body>
+</html>

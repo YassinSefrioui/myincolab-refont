@@ -1,0 +1,350 @@
+/* ============================================================
+   INCO LAB — Refonte "Compass" (DA 1b)
+   Tokens du handoff design, re-keyés sur la convention de thème
+   de l'app : défaut = dark (:root), [data-theme="light"] = clair.
+   ============================================================ */
+
+:root {
+  /* Thème sombre (dérivé 1a) */
+  --bg: #12141d;
+  --surface: #1b2033;
+  --surface-2: #232941;
+  --column: #1f2436;
+  --tile: #11141a;
+  --border: rgba(255, 255, 255, .08);
+  --border-lt: rgba(255, 255, 255, .06);
+  --text: #eef1fb;
+  --text-2: #aab0c8;
+  --muted: #6b7292;
+  --accent: #7c96f5;
+  --accent-contrast: #11141a;
+  --accent-soft: rgba(124, 150, 245, .14);
+  --accent-soft-2: rgba(124, 150, 245, .22);
+  --notif-dot: #e0607a;
+  --danger: #e5484d;
+  --success: #4bb37a;
+  --warning: #f0a04b;
+  --online: #2a9d8f;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .25);
+  --shadow-pop: 0 12px 40px rgba(0, 0, 0, .5);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+[data-theme="light"] {
+  /* Thème clair (handoff Compass) */
+  --bg: #f4f5f9;
+  --surface: #ffffff;
+  --surface-2: #f4f5f9;
+  --column: #eceef4;
+  --tile: #e7e9f2;
+  --border: rgba(20, 20, 40, .08);
+  --border-lt: rgba(20, 20, 40, .07);
+  --text: #1a1d29;
+  --text-2: #5b6072;
+  --muted: #9298ab;
+  --accent: #4f46e5;
+  --accent-contrast: #ffffff;
+  --accent-soft: rgba(79, 70, 229, .10);
+  --accent-soft-2: rgba(79, 70, 229, .14);
+  --shadow: 0 1px 2px rgba(20, 20, 40, .04);
+  --shadow-pop: 0 12px 40px rgba(20, 20, 40, .18);
+}
+
+/* ---------- Fond dynamique ---------- */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Coquille — nav gauche 88px + header 64px (DA Compass)
+   ============================================================ */
+.app-shell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.left-nav {
+  width: 88px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(14px);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 0;
+  gap: 10px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.left-nav::-webkit-scrollbar { display: none; }
+
+.nav-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+  object-fit: cover;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.nav-item {
+  width: 64px;
+  padding: 8px 0;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: var(--muted);
+  position: relative;
+  transition: background .18s ease, color .18s ease;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.nav-item .nav-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.nav-item:hover { background: var(--accent-soft); }
+.nav-item.active { background: var(--accent-soft); color: var(--accent); }
+.nav-item.active .nav-label { color: var(--accent); }
+.nav-item .badge {
+  position: absolute;
+  top: 4px;
+  right: 10px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--notif-dot);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-item svg { width: 20px; height: 20px; }
+
+.nav-user {
+  margin-top: auto;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ---------- Header ---------- */
+.app-header {
+  height: 64px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--surface) 88%, transparent) !important;
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header-search {
+  width: 300px;
+  max-width: 44vw;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-lt);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 12px;
+  transition: border-color .15s ease;
+}
+.header-search:hover { border-color: var(--accent); color: var(--accent); }
+.header-search svg { width: 13px; height: 13px; flex-shrink: 0; }
+.header-search .search-hint { flex: 1; text-align: left; color: var(--muted); }
+.header-search kbd {
+  font-size: 9.5px;
+  font-family: var(--font);
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border-lt);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+
+.header-right { display: flex; align-items: center; gap: 14px; }
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border-lt);
+  background: var(--surface-2);
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: background .18s ease, color .18s ease;
+  flex-shrink: 0;
+}
+.icon-btn:hover { background: var(--accent-soft); color: var(--accent); }
+.icon-btn svg { width: 16px; height: 16px; }
+.icon-btn .dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--notif-dot);
+  border: 2px solid var(--surface);
+}
+.icon-btn .count-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--notif-dot);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Corps ---------- */
+.app-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+  outline: none;
+}
+
+.view-anim { animation: viewIn .25s ease; }
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Avatar rail ---------- */
+.rail-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  flex-shrink: 0;
+  position: relative;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  object-fit: cover;
+  overflow: hidden;
+}
+.nav-user .presence {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+  background: var(--online);
+}
+
+/* ---------- Popover header (timezones) ---------- */
+.header-popover {
+  position: absolute;
+  top: 58px;
+  right: 24px;
+  z-index: 120;
+  width: 300px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+  animation: viewIn .18s ease;
+}
+
+/* ---------- Drawer mobile ---------- */
+.drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background .18s ease, color .18s ease;
+}
+.drawer-item:hover { background: var(--accent-soft); color: var(--accent); }
+.drawer-item.active { background: var(--accent-soft); color: var(--accent); }
+.drawer-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* ---------- Nav mobile bas (Compass) ---------- */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 4px 4px 8px;
+}
+.mobile-bottom-nav .nav-item { width: 56px; padding: 6px 0; }
+
+@media (max-width: 767px) {
+  .left-nav { display: none; }
+  .app-header { padding: 0 14px; }
+  .header-search { width: 100%; max-width: none; flex: 1; }
+}

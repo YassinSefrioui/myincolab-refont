@@ -1,0 +1,1021 @@
+@import "tailwindcss";
+@import "./styles/compass.css";
+
+/* ═══════════════════════════════════════════════════════════════════
+   INCO LAB — Refonte "Compass" (DA 1b)
+   La palette Tailwind utilisée par les pages est re-mappée sur les
+   tokens Compass : tout le code existant adopte la nouvelle DA.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@theme {
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+
+    /* Neutres (mode sombre Compass) — utilisés par bg-slate-*, text-slate-*… */
+    --color-slate-950: #0d0f16;
+    --color-slate-900: #12141d;
+    --color-slate-800: #1b2033;
+    --color-slate-700: #232941;
+    --color-slate-600: #323a5c;
+    --color-slate-500: #6b7292;
+    --color-slate-400: #aab0c8;
+    --color-slate-300: #c3c9dd;
+    --color-slate-200: #dbe0ef;
+    --color-slate-100: #eef1fb;
+    --color-slate-50:  #f6f7fd;
+
+    /* Accent : bleu → indigo Compass */
+    --color-blue-950: #201d5e;
+    --color-blue-900: #2a2680;
+    --color-blue-800: #3730a3;
+    --color-blue-700: #4338ca;
+    --color-blue-600: #4f46e5;
+    --color-blue-500: #6366f1;
+    --color-blue-400: #7c96f5;
+    --color-blue-300: #a5b4fc;
+    --color-blue-200: #c7d2fe;
+    --color-blue-100: #e0e7ff;
+    --color-blue-50:  #eef2ff;
+}
+
+/* ── Bridge : anciennes variables de thème → tokens Compass ──
+   (elles suivent automatiquement le thème clair/sombre) */
+:root, [data-theme="light"] {
+    --bg-primary:    var(--bg);
+    --bg-secondary:  var(--surface);
+    --bg-tertiary:   var(--surface-2);
+    --bg-card:       color-mix(in srgb, var(--surface) 92%, transparent);
+    --bg-card-hover: var(--surface-2);
+    --bg-input:      var(--surface-2);
+
+    --border-primary: var(--border);
+    --border-input:   var(--border);
+
+    --text-primary:   var(--text);
+    --text-secondary: var(--text-2);
+    --text-muted:     var(--muted);
+    --text-placeholder: var(--muted);
+
+    --sidebar-bg: color-mix(in srgb, var(--surface) 88%, transparent);
+    --header-bg:  color-mix(in srgb, var(--surface) 88%, transparent);
+
+    --accent-blue:   var(--accent);
+    --accent-blue-h: color-mix(in srgb, var(--accent) 85%, #000);
+    --scrollbar-bg:  transparent;
+    --scrollbar-thumb: color-mix(in srgb, var(--muted) 45%, transparent);
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    transition: background 0.3s ease, color 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-bg); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── Theme-aware utility classes ────────────────────────────────────────── */
+
+.theme-bg-primary    { background: var(--bg-primary)   !important; }
+.theme-bg-secondary  { background: var(--bg-secondary)  !important; }
+.theme-bg-card       { background: var(--bg-card)        !important; }
+.theme-bg-input      { background: var(--bg-input)       !important; }
+.theme-border        { border-color: var(--border-primary) !important; }
+.theme-border-input  { border-color: var(--border-input)  !important; }
+.theme-text-primary  { color: var(--text-primary)   !important; }
+.theme-text-secondary{ color: var(--text-secondary) !important; }
+.theme-text-muted    { color: var(--text-muted)     !important; }
+.theme-sidebar       { background: var(--sidebar-bg) !important; }
+.theme-header        { background: var(--header-bg)  !important; }
+
+/* ── Smooth transitions for theme switching ─────────────────────────────── */
+
+.theme-transition,
+.theme-transition * {
+    transition:
+            background-color 0.25s ease,
+            border-color     0.25s ease,
+            color            0.2s ease,
+            box-shadow       0.25s ease !important;
+}
+
+/* ── GSAP initial states (prevent flash before animation) ───────────────── */
+
+.gsap-fade-in  { opacity: 0; }
+.gsap-slide-up { opacity: 0; transform: translateY(20px); }
+
+/* ── Card shimmer loading ────────────────────────────────────────────────── */
+
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+}
+
+.skeleton {
+    background: linear-gradient(
+            90deg,
+            var(--bg-card) 25%,
+            var(--bg-card-hover) 50%,
+            var(--bg-card) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+
+/* ── Light mode specific overrides for Tailwind dark classes ────────────── */
+
+/* Login (refonte Compass) : fond clair en thème clair, les orbes restent */
+[data-theme="light"] .bg-gradient-to-br.from-slate-900.via-blue-950 {
+    background: var(--bg) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ANIMATIONS & EFFECTS — INCO LAB
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Login page: floating gradient orbs ─────────────────────────────────── */
+.login-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.25;
+    pointer-events: none;
+    will-change: transform;
+}
+.login-orb-1 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, #6366f1, transparent 70%);
+    top: -10%; left: -5%;
+    animation: orbFloat1 12s ease-in-out infinite;
+}
+.login-orb-2 {
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, #8b5cf6, transparent 70%);
+    bottom: -5%; right: -5%;
+    animation: orbFloat2 15s ease-in-out infinite;
+}
+.login-orb-3 {
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, #06b6d4, transparent 70%);
+    top: 40%; left: 50%;
+    animation: orbFloat3 18s ease-in-out infinite;
+}
+
+@keyframes orbFloat1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(40px, 30px) scale(1.1); }
+    66% { transform: translate(-20px, -20px) scale(0.95); }
+}
+@keyframes orbFloat2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(-30px, -25px) scale(1.05); }
+    66% { transform: translate(25px, 15px) scale(0.9); }
+}
+@keyframes orbFloat3 {
+    0%, 100% { transform: translate(-50%, 0) scale(1); opacity: 0.15; }
+    50% { transform: translate(-50%, -30px) scale(1.15); opacity: 0.3; }
+}
+
+/* ── Login logo glow pulse ──────────────────────────────────────────────── */
+.login-logo-glow {
+    animation: logoGlow 3s ease-in-out infinite;
+}
+@keyframes logoGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(79, 70, 229, 0.3), 0 8px 30px rgba(79, 70, 229, 0.15); }
+    50% { box-shadow: 0 0 35px rgba(79, 70, 229, 0.5), 0 8px 40px rgba(79, 70, 229, 0.25); }
+}
+
+/* ── Login card — animated gradient border ──────────────────────────────── */
+.login-card-wrapper {
+    position: relative;
+    border-radius: 1rem;
+}
+.login-card-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 1rem;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), transparent 40%, transparent 60%, rgba(139, 92, 246, 0.3));
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    animation: borderRotate 6s linear infinite;
+    pointer-events: none;
+}
+@keyframes borderRotate {
+    0% { background: linear-gradient(0deg, rgba(99, 102, 241, 0.4), transparent 40%, transparent 60%, rgba(139, 92, 246, 0.4)); }
+    25% { background: linear-gradient(90deg, rgba(99, 102, 241, 0.4), transparent 40%, transparent 60%, rgba(139, 92, 246, 0.4)); }
+    50% { background: linear-gradient(180deg, rgba(99, 102, 241, 0.4), transparent 40%, transparent 60%, rgba(139, 92, 246, 0.4)); }
+    75% { background: linear-gradient(270deg, rgba(99, 102, 241, 0.4), transparent 40%, transparent 60%, rgba(139, 92, 246, 0.4)); }
+    100% { background: linear-gradient(360deg, rgba(99, 102, 241, 0.4), transparent 40%, transparent 60%, rgba(139, 92, 246, 0.4)); }
+}
+.login-card-wrapper::before {
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+}
+
+/* ── Input focus glow ───────────────────────────────────────────────────── */
+input:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 0 20px rgba(99, 102, 241, 0.08) !important;
+}
+
+/* ── Submit button shine effect ─────────────────────────────────────────── */
+button[type="submit"] {
+    position: relative;
+    overflow: hidden;
+}
+button[type="submit"]::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    transition: left 0.5s ease;
+}
+button[type="submit"]:hover::after {
+    left: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DASHBOARD & GLOBAL CARD EFFECTS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Card hover lift with subtle glow ───────────────────────────────────── */
+.dash-stat {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease !important;
+}
+.dash-stat:hover {
+    transform: translateY(-2px) scale(1.01) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(99, 102, 241, 0.08) !important;
+}
+
+/* ── Sidebar nav items — smooth hover slide ─────────────────────────────── */
+nav a {
+    position: relative;
+    transition: all 0.2s ease !important;
+}
+
+/* ── Notification badge pulse ───────────────────────────────────────────── */
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+span[style*="background: #ef4444"] {
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* ── Page transitions — smooth content fade ─────────────────────────────── */
+main > * {
+    animation: pageContentFade 0.35s ease-out both;
+}
+@keyframes pageContentFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Interactive card ripple on click ───────────────────────────────────── */
+.dash-stat:active,
+[class*="rounded-2xl"][class*="cursor-pointer"]:active {
+    transform: scale(0.98) !important;
+    transition: transform 0.1s ease !important;
+}
+
+/* ── Floating action button (AI) breathe animation ──────────────────────── */
+button[title="AI Assistant"] {
+    animation: fabBreathe 3s ease-in-out infinite;
+}
+@keyframes fabBreathe {
+    0%, 100% { box-shadow: 0 4px 20px rgba(147, 51, 234, 0.3); }
+    50% { box-shadow: 0 6px 30px rgba(147, 51, 234, 0.5), 0 0 60px rgba(147, 51, 234, 0.15); }
+}
+
+/* ── Scrollbar glow on hover ────────────────────────────────────────────── */
+::-webkit-scrollbar-thumb:hover {
+    background: #7c96f5 !important;
+    box-shadow: 0 0 8px rgba(124, 150, 245, 0.3);
+}
+
+/* ── Loading spinner enhancement ────────────────────────────────────────── */
+@keyframes spinGlow {
+    0% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.3)); }
+    50% { filter: drop-shadow(0 0 6px rgba(124, 150, 245,0.5)); }
+    100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.3)); }
+}
+.animate-spin {
+    animation: spin 0.8s linear infinite, spinGlow 2s ease-in-out infinite !important;
+}
+
+/* ── Tooltip / badge shimmer ────────────────────────────────────────────── */
+span[class*="bg-purple-600/20"] {
+    animation: betaShimmer 3s ease-in-out infinite;
+}
+@keyframes betaShimmer {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ── Tab switch indicator animation ─────────────────────────────────────── */
+.rounded-xl.bg-blue-600 {
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* ── Smooth skeleton loading pulse (enhanced) ───────────────────────────── */
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+}
+
+.skeleton {
+    background: linear-gradient(
+            90deg,
+            var(--bg-card) 25%,
+            var(--bg-card-hover) 37%,
+            rgba(124, 150, 245, 0.06) 50%,
+            var(--bg-card-hover) 63%,
+            var(--bg-card) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+/* ── Reduce motion for accessibility ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .login-orb { display: none; }
+    canvas { display: none; }
+    main > * { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PAGE-SPECIFIC ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Chat: message bubble entrance ──────────────────────────────────────── */
+[class*="space-y-1"] > div {
+    animation: msgSlideIn 0.22s ease-out both;
+}
+@keyframes msgSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Chat: conversation item hover ──────────────────────────────────────── */
+[class*="border-b"] > button {
+    transition: background 0.15s ease, transform 0.15s ease !important;
+}
+
+/* ── Chat: send button pulse when active ────────────────────────────────── */
+button[class*="bg-blue-600"][class*="rounded-2xl"]:not(:disabled):hover {
+    animation: sendPulse 0.4s ease;
+}
+@keyframes sendPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+/* ── Calendar: day cell hover ───────────────────────────────────────────── */
+[class*="min-h-"][class*="border"][class*="rounded"] {
+    transition: background 0.15s ease, box-shadow 0.2s ease, transform 0.15s ease !important;
+}
+[class*="min-h-"][class*="border"][class*="rounded"]:hover {
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ── Calendar: event pill hover ─────────────────────────────────────────── */
+[class*="bg-blue-500/80"], [class*="bg-emerald-500/80"], [class*="bg-purple-500/80"],
+[class*="bg-orange-500/80"], [class*="bg-rose-500/80"] {
+    transition: transform 0.15s ease, box-shadow 0.2s ease !important;
+}
+[class*="bg-blue-500/80"]:hover, [class*="bg-emerald-500/80"]:hover, [class*="bg-purple-500/80"]:hover,
+[class*="bg-orange-500/80"]:hover, [class*="bg-rose-500/80"]:hover {
+    transform: scale(1.03) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+}
+
+/* ── Documents: file card hover ─────────────────────────────────────────── */
+.docs-file-card {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.25s ease,
+    border-color 0.2s ease !important;
+}
+.docs-file-card:hover {
+    transform: translateY(-3px) scale(1.01) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ── Groups / Admin: member row hover ───────────────────────────────────── */
+.group-member-row,
+.admin-row,
+tr {
+    transition: background 0.15s ease !important;
+}
+
+/* ── Projects: project card hover ───────────────────────────────────────── */
+.project-card {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease !important;
+}
+.project-card:hover {
+    transform: translateY(-3px) scale(1.005) !important;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(99, 102, 241, 0.08) !important;
+}
+
+/* ── Profile: avatar hover scale ────────────────────────────────────────── */
+.profile-avatar {
+    transition: transform 0.2s ease !important;
+}
+.profile-avatar:hover {
+    transform: scale(1.05) !important;
+}
+
+/* ── Modal backdrop entrance ────────────────────────────────────────────── */
+.fixed.inset-0[class*="bg-black"] {
+    animation: backdropFadeIn 0.25s ease-out;
+}
+@keyframes backdropFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ── Modal card entrance ────────────────────────────────────────────────── */
+.fixed.inset-0 > div[class*="rounded-2xl"],
+.fixed.inset-0 > div > div[class*="rounded-2xl"] {
+    animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: scale(0.92) translateY(16px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Announcement card entrance ─────────────────────────────────────────── */
+[class*="rounded-2xl"][class*="border"][class*="p-5"],
+[class*="rounded-2xl"][class*="border"][class*="p-6"] {
+    transition: transform 0.2s ease, box-shadow 0.25s ease !important;
+}
+
+/* ── Admin/SuperAdmin: stat card ────────────────────────────────────────── */
+.admin-stat, .sa-card {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease !important;
+}
+.admin-stat:hover, .sa-card:hover {
+    transform: translateY(-2px) scale(1.01) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ── Task templates: template card ──────────────────────────────────────── */
+[class*="rounded-2xl"][class*="cursor-pointer"] {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.25s ease !important;
+}
+[class*="rounded-2xl"][class*="cursor-pointer"]:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ── Notification / toast shimmer ───────────────────────────────────────── */
+[class*="react-hot-toast"] > div {
+    animation: toastSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes toastSlideIn {
+    from { opacity: 0; transform: translateY(-12px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Typing indicator bounce ────────────────────────────────────────────── */
+.animate-bounce {
+    animation: typingBounce 1.2s ease-in-out infinite !important;
+}
+@keyframes typingBounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-4px); }
+}
+
+/* ── Group card ─────────────────────────────────────────────────────────── */
+.group-card {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease !important;
+}
+.group-card:hover {
+    transform: translateY(-2px) scale(1.005) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ── Search input focus expand ──────────────────────────────────────────── */
+input[type="text"][class*="rounded-xl"]:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12), 0 0 16px rgba(99, 102, 241, 0.06) !important;
+}
+
+/* ── Tab switch indicator ───────────────────────────────────────────────── */
+button[class*="bg-blue-600"][class*="rounded-lg"],
+button[class*="bg-blue-600"][class*="rounded-xl"] {
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+/* ── Emoji reaction hover ───────────────────────────────────────────────── */
+button[class*="hover:scale-125"] {
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* ── Presence dot pulse (online) ────────────────────────────────────────── */
+.bg-emerald-400[class*="rounded-full"][class*="border-2"] {
+    animation: presencePulse 3s ease-in-out infinite;
+}
+@keyframes presencePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
+    50% { box-shadow: 0 0 0 3px rgba(52, 211, 153, 0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+
+[data-theme="light"] .bg-slate-900 { background-color: #f4f5f9 !important; }
+[data-theme="light"] .bg-slate-800 { background-color: #ffffff !important; }
+[data-theme="light"] .bg-slate-700 { background-color: #f4f5f9 !important; }
+[data-theme="light"] .bg-slate-600 { background-color: #e7e9f2 !important; }
+[data-theme="light"] .bg-slate-950 { background-color: #f4f5f9 !important; }
+
+[data-theme="light"] .bg-slate-900\/80 { background-color: rgba(244,245,249,0.95) !important; }
+[data-theme="light"] .bg-slate-900\/50 { background-color: rgba(244,245,249,0.9)  !important; }
+[data-theme="light"] .bg-slate-900\/30 { background-color: rgba(244,245,249,0.7)  !important; }
+[data-theme="light"] .bg-slate-800\/80 { background-color: rgba(255,255,255,0.98) !important; }
+[data-theme="light"] .bg-slate-800\/60 { background-color: rgba(255,255,255,0.95) !important; }
+[data-theme="light"] .bg-slate-800\/50 { background-color: rgba(255,255,255,0.9)  !important; }
+[data-theme="light"] .bg-slate-800\/40 { background-color: rgba(255,255,255,0.8)  !important; }
+[data-theme="light"] .bg-slate-800\/30 { background-color: rgba(255,255,255,0.7)  !important; }
+[data-theme="light"] .bg-slate-800\/20 { background-color: rgba(255,255,255,0.6)  !important; }
+[data-theme="light"] .bg-slate-700\/60 { background-color: rgba(244,245,249,0.9)  !important; }
+[data-theme="light"] .bg-slate-700\/50 { background-color: rgba(244,245,249,0.8)  !important; }
+[data-theme="light"] .bg-slate-700\/40 { background-color: rgba(244,245,249,0.7)  !important; }
+[data-theme="light"] .bg-slate-700\/30 { background-color: rgba(244,245,249,0.6)  !important; }
+[data-theme="light"] .bg-slate-700\/20 { background-color: rgba(244,245,249,0.5)  !important; }
+[data-theme="light"] .bg-slate-700\/10 { background-color: rgba(244,245,249,0.4)  !important; }
+
+/* ── Text: tout ce qui est blanc ou gris clair doit devenir sombre ── */
+[data-theme="light"] .text-white        { color: #1a1d29 !important; }
+
+/* …sauf sur les fonds accentués/colorés : le blanc doit rester blanc */
+[data-theme="light"] .bg-blue-500.text-white,
+[data-theme="light"] .bg-blue-600.text-white,
+[data-theme="light"] .bg-blue-700.text-white,
+[data-theme="light"] .bg-indigo-600.text-white,
+[data-theme="light"] .bg-purple-600.text-white,
+[data-theme="light"] .bg-violet-600.text-white,
+[data-theme="light"] .bg-emerald-500.text-white,
+[data-theme="light"] .bg-emerald-600.text-white,
+[data-theme="light"] .bg-green-600.text-white,
+[data-theme="light"] .bg-red-500.text-white,
+[data-theme="light"] .bg-red-600.text-white,
+[data-theme="light"] .bg-rose-600.text-white,
+[data-theme="light"] .bg-orange-500.text-white,
+[data-theme="light"] .bg-orange-600.text-white,
+[data-theme="light"] .bg-amber-500.text-white,
+[data-theme="light"] .bg-amber-600.text-white,
+[data-theme="light"] [class*="bg-gradient"].text-white,
+[data-theme="light"] .bg-blue-500 .text-white,
+[data-theme="light"] .bg-blue-600 .text-white,
+[data-theme="light"] .bg-blue-700 .text-white {
+    color: #ffffff !important;
+}
+[data-theme="light"] .text-slate-50     { color: #1a1d29 !important; }
+[data-theme="light"] .text-slate-100    { color: #1a1d29 !important; }
+[data-theme="light"] .text-slate-200    { color: #454b60 !important; }
+[data-theme="light"] .text-slate-300    { color: #454b60 !important; }
+[data-theme="light"] .text-slate-400    { color: #5b6072 !important; }
+[data-theme="light"] .text-slate-500    { color: #9298ab !important; }
+[data-theme="light"] .text-slate-600    { color: #5b6072 !important; }
+
+/* ── Borders ── */
+[data-theme="light"] .border-slate-800    { border-color: #e7e9f2 !important; }
+[data-theme="light"] .border-slate-700    { border-color: #e7e9f2 !important; }
+[data-theme="light"] .border-slate-700\/70 { border-color: rgba(223,225,235,0.9) !important; }
+[data-theme="light"] .border-slate-700\/60 { border-color: rgba(223,225,235,0.8) !important; }
+[data-theme="light"] .border-slate-700\/50 { border-color: rgba(223,225,235,0.7) !important; }
+[data-theme="light"] .border-slate-700\/40 { border-color: rgba(223,225,235,0.6) !important; }
+[data-theme="light"] .border-slate-700\/30 { border-color: rgba(223,225,235,0.5) !important; }
+[data-theme="light"] .border-slate-700\/20 { border-color: rgba(223,225,235,0.4) !important; }
+[data-theme="light"] .border-slate-600    { border-color: #d8dae6 !important; }
+[data-theme="light"] .border-slate-600\/50 { border-color: rgba(223,225,235,0.9) !important; }
+[data-theme="light"] .border-slate-600\/30 { border-color: rgba(223,225,235,0.6) !important; }
+
+/* ── Dividers ── */
+[data-theme="light"] .divide-slate-700\/20 > * + * { border-color: rgba(223,225,235,0.5) !important; }
+[data-theme="light"] .divide-slate-700\/30 > * + * { border-color: rgba(223,225,235,0.6) !important; }
+
+/* ── Hover backgrounds ── */
+[data-theme="light"] .hover\:bg-slate-700\/50:hover { background-color: rgba(244,245,249,0.9) !important; }
+[data-theme="light"] .hover\:bg-slate-700\/30:hover { background-color: rgba(244,245,249,0.7) !important; }
+[data-theme="light"] .hover\:bg-slate-700\/10:hover { background-color: rgba(244,245,249,0.5) !important; }
+[data-theme="light"] .hover\:bg-slate-800\/40:hover { background-color: rgba(244,245,249,0.8) !important; }
+[data-theme="light"] .hover\:text-white:hover { color: #1a1d29 !important; }
+
+/* ── Placeholder text ── */
+[data-theme="light"] .placeholder\:text-slate-500::placeholder { color: #9298ab !important; }
+
+/* ── Ring ── */
+[data-theme="light"] .ring-slate-700\/40 { --tw-ring-color: rgba(223,225,235,0.6) !important; }
+
+/* Sidebar / header */
+[data-theme="light"] aside,
+[data-theme="light"] header {
+    border-color: rgba(223,225,235, 0.8) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Modals */
+[data-theme="light"] .fixed.inset-0.bg-black\/60 { background: rgba(0, 0, 0, 0.4) !important; }
+
+/* Tables */
+[data-theme="light"] table thead tr { background-color: #f4f5f9 !important; }
+[data-theme="light"] table tbody tr:hover { background-color: #f4f5f9 !important; }
+[data-theme="light"] table td, [data-theme="light"] table th { border-color: #e7e9f2 !important; }
+
+/* Input fields */
+[data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select {
+    background-color: #ffffff !important;
+    color: #1a1d29 !important;
+    border-color: #d8dae6 !important;
+}
+[data-theme="light"] input::placeholder, [data-theme="light"] textarea::placeholder {
+    color: #9298ab !important;
+}
+
+/* Code / mono */
+[data-theme="light"] .font-mono { color: #454b60 !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   INCO LAB — Enhanced Animations v2
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Card setup for shimmer pseudo-elements ─────────────────────────────── */
+.dash-stat,
+.project-card,
+.docs-file-card,
+.group-card {
+    position: relative;
+    overflow: hidden;
+}
+
+/* ── Holographic shimmer sweep on card hover ────────────────────────────── */
+.dash-stat::before,
+.project-card::before,
+.docs-file-card::before,
+.group-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -80%;
+    width: 50%; height: 100%;
+    background: linear-gradient(
+            100deg,
+            transparent,
+            rgba(255,255,255,0.03) 20%,
+            rgba(255,255,255,0.09) 50%,
+            rgba(255,255,255,0.03) 80%,
+            transparent
+    );
+    transform: skewX(-20deg);
+    pointer-events: none;
+    opacity: 0;
+}
+.dash-stat:hover::before,
+.project-card:hover::before,
+.docs-file-card:hover::before,
+.group-card:hover::before {
+    opacity: 1;
+    animation: holoSweep 0.75s ease forwards;
+}
+@keyframes holoSweep {
+    from { left: -80%; }
+    to   { left: 150%; }
+}
+
+/* ── Enhanced card glow borders on hover ────────────────────────────────── */
+.dash-stat:hover {
+    box-shadow:
+            0 8px 30px rgba(0,0,0,0.2),
+            0 0 0 1px rgba(124, 150, 245,0.18),
+            0 0 25px rgba(124, 150, 245,0.08) !important;
+}
+.project-card:hover {
+    box-shadow:
+            0 12px 35px rgba(0,0,0,0.18),
+            0 0 0 1px rgba(124, 150, 245,0.14),
+            0 0 30px rgba(124, 150, 245,0.07) !important;
+}
+.group-card:hover {
+    box-shadow:
+            0 10px 30px rgba(0,0,0,0.15),
+            0 0 0 1px rgba(139,92,246,0.14),
+            0 0 25px rgba(139,92,246,0.07) !important;
+}
+.docs-file-card:hover {
+    box-shadow:
+            0 8px 25px rgba(0,0,0,0.15),
+            0 0 0 1px rgba(52,211,153,0.12),
+            0 0 20px rgba(52,211,153,0.06) !important;
+}
+
+/* ── FAB: dual pulsing ring via box-shadow ──────────────────────────────── */
+@keyframes fabBreathe {
+    0%, 100% {
+        box-shadow:
+                0 4px 20px rgba(147,51,234,0.35),
+                0 0 0 0   rgba(147,51,234,0.4);
+    }
+    50% {
+        box-shadow:
+                0 6px 35px rgba(147,51,234,0.55),
+                0 0 0 16px rgba(147,51,234,0);
+    }
+}
+
+/* ── Enhanced login logo glow ───────────────────────────────────────────── */
+@keyframes logoGlow {
+    0%, 100% {
+        box-shadow:
+                0 0 20px rgba(79, 70, 229,0.4),
+                0 0 40px rgba(79, 70, 229,0.15),
+                0 8px 30px rgba(79, 70, 229,0.2);
+    }
+    50% {
+        box-shadow:
+                0 0 40px rgba(79, 70, 229,0.65),
+                0 0 70px rgba(79, 70, 229,0.25),
+                0 0 90px rgba(139,92,246,0.12),
+                0 8px 40px rgba(79, 70, 229,0.3);
+    }
+}
+
+/* ── Page transition: fade + subtle blur ────────────────────────────────── */
+@keyframes pageContentFade {
+    from { opacity: 0; transform: translateY(6px); filter: blur(3px); }
+    to   { opacity: 1; transform: translateY(0);   filter: blur(0);   }
+}
+
+/* ── Presence dot: scale + expanding ring ───────────────────────────────── */
+@keyframes presencePulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(52,211,153,0.6);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(52,211,153,0);
+        transform: scale(1.12);
+    }
+}
+
+/* ── Notification badge: scale + ring ──────────────────────────────────── */
+@keyframes badgePulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239,68,68,0.5);
+    }
+    50% {
+        transform: scale(1.18);
+        box-shadow: 0 0 0 4px rgba(239,68,68,0);
+    }
+}
+
+/* ── Message bubble: scale-in entrance ─────────────────────────────────── */
+@keyframes msgSlideIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* ── Modal backdrop: frosted glass ─────────────────────────────────────── */
+.fixed.inset-0[class*="bg-black"] {
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+/* ── Modal entrance: deeper spring ─────────────────────────────────────── */
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: scale(0.88) translateY(24px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* ── Typing indicator: taller wave ─────────────────────────────────────── */
+@keyframes typingBounce {
+    0%, 80%, 100% { transform: translateY(0) scale(1); }
+    40%           { transform: translateY(-5px) scale(1.1); }
+}
+
+/* ── Skeleton: blue-tinted shimmer ─────────────────────────────────────── */
+.skeleton {
+    background: linear-gradient(
+            90deg,
+            var(--bg-card) 20%,
+            rgba(124, 150, 245,0.07) 38%,
+            rgba(124, 150, 245,0.13) 50%,
+            rgba(124, 150, 245,0.07) 62%,
+            var(--bg-card) 80%
+    ) !important;
+    background-size: 200% 100% !important;
+    animation: shimmer 1.6s ease-in-out infinite !important;
+}
+
+/* ── Spinner: enhanced glow ─────────────────────────────────────────────── */
+@keyframes spinGlow {
+    0%, 100% { filter: drop-shadow(0 0 3px rgba(124, 150, 245,0.4)); }
+    50%      { filter: drop-shadow(0 0 9px rgba(124, 150, 245,0.75)); }
+}
+
+/* ── Scrollbar: gradient thumb ──────────────────────────────────────────── */
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #454b60 0%, #5b6072 100%);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #7c96f5 0%, #818cf8 100%) !important;
+    box-shadow: 0 0 10px rgba(124, 150, 245,0.5);
+}
+
+/* ── Tab active button: ambient glow ────────────────────────────────────── */
+button[class*="bg-blue-600"][class*="rounded-lg"],
+button[class*="bg-blue-600"][class*="rounded-xl"] {
+    box-shadow: 0 4px 15px rgba(79, 70, 229,0.35), 0 0 20px rgba(79, 70, 229,0.1);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* ── Login: animated dot-grid overlay ──────────────────────────────────── */
+.login-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(148,163,184,0.65) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.04;
+    animation: gridScroll 45s linear infinite;
+}
+@keyframes gridScroll {
+    from { background-position: 0 0; }
+    to   { background-position: 32px 32px; }
+}
+
+/* ── Login: 4th orb (emerald) ───────────────────────────────────────────── */
+.login-orb-4 {
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, #10b981, transparent 70%);
+    top: 55%; left: 8%;
+    animation: orbFloat2 22s ease-in-out infinite 4s;
+}
+
+/* ── Gradient text utility ──────────────────────────────────────────────── */
+.gradient-heading {
+    background: linear-gradient(135deg, #7c96f5 0%, #a78bfa 40%, #34d399 70%, #7c96f5 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientFlow 6s ease-in-out infinite;
+}
+@keyframes gradientFlow {
+    0%, 100% { background-position: 0% center; }
+    50%      { background-position: 100% center; }
+}
+
+/* ── Glow divider utility ───────────────────────────────────────────────── */
+.glow-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(124, 150, 245,0.5) 50%, transparent 100%);
+    border: none;
+    margin: 0;
+    animation: dividerPulse 4s ease-in-out infinite;
+}
+@keyframes dividerPulse {
+    0%, 100% { opacity: 0.5; }
+    50%      { opacity: 1; }
+}
+
+/* ── Ripple effect utility ──────────────────────────────────────────────── */
+.btn-ripple {
+    position: relative;
+    overflow: hidden;
+}
+.btn-ripple::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25) 0%, transparent 70%);
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none;
+}
+.btn-ripple:active::after {
+    animation: rippleEffect 0.5s ease-out;
+}
+@keyframes rippleEffect {
+    0%   { transform: scale(0); opacity: 0.6; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ── Sidebar active item: ambient glow ─────────────────────────────────── */
+nav a[aria-current="page"],
+nav a.active {
+    box-shadow: 0 0 20px rgba(79, 70, 229,0.2), inset 0 0 20px rgba(79, 70, 229,0.05) !important;
+}
+
+/* ── Light mode: brighter shimmer sweep ─────────────────────────────────── */
+[data-theme="light"] .dash-stat::before,
+[data-theme="light"] .project-card::before,
+[data-theme="light"] .docs-file-card::before,
+[data-theme="light"] .group-card::before {
+    background: linear-gradient(
+            100deg,
+            transparent,
+            rgba(255,255,255,0.5) 20%,
+            rgba(255,255,255,0.85) 50%,
+            rgba(255,255,255,0.5) 80%,
+            transparent
+    );
+}
+[data-theme="light"] .glow-divider {
+    background: linear-gradient(90deg, transparent 0%, rgba(79, 70, 229,0.35) 50%, transparent 100%);
+}
+[data-theme="light"] .login-grid {
+    opacity: 0.06;
+}
+
+/* ── Accessibility: disable heavy effects ───────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .login-grid,
+    .gradient-heading,
+    .glow-divider {
+        animation: none !important;
+    }
+    .dash-stat::before,
+    .project-card::before,
+    .docs-file-card::before,
+    .group-card::before {
+        display: none;
+    }
+    .fixed.inset-0[class*="bg-black"] {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+}
+
+/* ── Mobile performance: strip expensive effects on touch screens ─────────
+   Root causes of login-page lag on mobile:
+     1. filter:blur(80px) on 4 large orbs  → forces full GPU compositing every
+        animation frame; mobile GPUs have ~10× less fill-rate than desktop.
+     2. borderRotate animation changes `background` (a gradient), which is NOT
+        compositor-threaded → triggers a CPU repaint 60×/sec.
+     3. gridScroll animates background-position of a repeating pattern → repaint.
+   Fix: hide orbs, stop non-compositor animations, keep only opacity tweens.
+   ────────────────────────────────────────────────────────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+    /* Hide the blurred orbs entirely — biggest win */
+    .login-orb { display: none !important; }
+
+    /* Stop the dot-grid scroll (background-position repaint) */
+    .login-grid { animation: none !important; }
+
+    /* Replace the animated gradient border with a static one */
+    .login-card-wrapper::before {
+        animation: none !important;
+        background: linear-gradient(135deg,
+            rgba(99, 102, 241, 0.35),
+            transparent 40%,
+            transparent 60%,
+            rgba(139, 92, 246, 0.35)
+        ) !important;
+    }
+
+    /* box-shadow animation is not compositor-threaded either */
+    .login-logo-glow { animation: none !important; }
+
+    /* backdrop-filter:blur() is the most expensive CSS property on mobile —
+       it samples and blurs every pixel behind the element every frame.
+       Replace with an opaque dark background — visually near-identical. */
+    .login-card {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background-color: rgba(15, 23, 42, 0.97) !important;
+    }
+}
