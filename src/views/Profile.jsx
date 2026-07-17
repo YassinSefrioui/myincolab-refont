@@ -73,7 +73,7 @@ export default function Profile() {
           <div style={{ flex: 1, minWidth: 160 }}>
             <label className="field-label">{t('language')}</label>
             <select className="select" value={prefs.lang} onChange={e => setLang(e.target.value)}>
-              {[['fr', 'Français'], ['en', 'English'], ['es', 'Español'], ['it', 'Italiano'], ['zh', '中文']].map(([k, lbl]) => <option value={k} key={k}>{lbl}</option>)}
+              {[['en', 'English'], ['fr', 'Français'], ['es', 'Español'], ['it', 'Italiano'], ['zh', '中文']].map(([k, lbl]) => <option value={k} key={k}>{lbl}</option>)}
             </select>
           </div>
           <div style={{ flex: 1, minWidth: 160 }}>

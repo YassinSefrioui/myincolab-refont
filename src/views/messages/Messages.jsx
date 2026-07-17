@@ -3,7 +3,7 @@ import Icon from '../../components/Icon.jsx';
 import Avatar from '../../components/Avatar.jsx';
 import MemberProfileModal from '../../components/MemberProfileModal.jsx';
 import CallPanel from './CallPanel.jsx';
-import { convLabel, markConvRead, member, nextId, nowTime, QUICK_REACTIONS } from '../../lib/helpers.js';
+import { convLabel, hasGuestExecute, markConvRead, member, nextId, nowTime, QUICK_REACTIONS } from '../../lib/helpers.js';
 import { useApp } from '../../state/AppContext.jsx';
 
 const REPLY_POOL = [
@@ -19,12 +19,12 @@ export default function Messages() {
   const [summary, setSummary] = useState(null);
   const [call, setCall] = useState(null);
   const [typingNote, setTypingNote] = useState('');
-  const [openThreads, setOpenThreads] = useState(() => new Set());
-  const [replyDrafts, setReplyDrafts] = useState({});
+  const [replyingTo, setReplyingTo] = useState(null);
   const [openMarker, setOpenMarker] = useState(0);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
   const replyTimer = useRef(null);
+  const inputRef = useRef(null);
 
   const convId = ui.activeConvId;
   const msgs = db.messagesByConv[convId] || [];
@@ -37,7 +37,7 @@ export default function Messages() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [msgs.length, convId]);
 
-  useEffect(() => { setSummary(null); setOpenThreads(new Set()); setCall(null); }, [convId]);
+  useEffect(() => { setSummary(null); setReplyingTo(null); setCall(null); }, [convId]);
   useEffect(() => () => { if (replyTimer.current) clearTimeout(replyTimer.current); }, []);
 
   // Capture les messages non lus au moment de l'ouverture (avant de marquer comme lu),
@@ -53,25 +53,13 @@ export default function Messages() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [convId, msgs.length]);
 
-  function toggleThread(msgId) {
-    setOpenThreads(prev => {
-      const next = new Set(prev);
-      if (next.has(msgId)) next.delete(msgId); else next.add(msgId);
-      return next;
-    });
+  function startReply(msgId) {
+    setReplyingTo(msgId);
+    inputRef.current?.focus();
   }
 
-  function sendThreadReply(msgId) {
-    const text = (replyDrafts[msgId] || '').trim();
-    if (!text) return;
-    updateDB(draft => {
-      const list = draft.messagesByConv[convId];
-      const m = list && list.find(x => x.id === msgId);
-      if (!m) return;
-      if (!m.threadReplies) m.threadReplies = [];
-      m.threadReplies.push({ id: nextId(m.threadReplies), user: user.id, text, time: nowTime(prefs.lang) });
-    });
-    setReplyDrafts(prev => ({ ...prev, [msgId]: '' }));
+  function scrollToMessage(msgId) {
+    document.getElementById('msg-' + msgId)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
   function toggleReaction(msgId, emoji) {
@@ -109,11 +97,13 @@ export default function Messages() {
   function sendMessage(fileInfo = null) {
     const text = input.trim();
     if (!text && !fileInfo) return;
+    const replyTo = replyingTo;
     updateDB(draft => {
       const list = draft.messagesByConv[convId] || (draft.messagesByConv[convId] = []);
-      list.push({ id: nextId(list), user: user.id, text: text || fileInfo.name, time: nowTime(prefs.lang), file: fileInfo });
+      list.push({ id: nextId(list), user: user.id, text: text || fileInfo.name, time: nowTime(prefs.lang), file: fileInfo, replyTo: replyTo || undefined });
     });
     setInput('');
+    setReplyingTo(null);
     simulateReply(convId);
   }
 
@@ -178,12 +168,11 @@ export default function Messages() {
       <div className="chat-scroll" id="chat-scroll" ref={scrollRef}>
         {msgs.map((m, i) => {
           const u = member(db, m.user);
-          const continued = i > 0 && msgs[i - 1].user === m.user;
-          const replies = m.threadReplies || [];
-          const isOpen = openThreads.has(m.id);
+          const continued = i > 0 && msgs[i - 1].user === m.user && !m.replyTo;
           const isUnread = m.id > openMarker && m.user !== user.id;
+          const quoted = m.replyTo ? msgs.find(x => x.id === m.replyTo) : null;
           return (
-            <div className={`msg-row${continued ? ' continued' : ''}${isUnread ? ' unread-msg' : ''}`} key={m.id}>
+            <div className={`msg-row${continued ? ' continued' : ''}${isUnread ? ' unread-msg' : ''}`} key={m.id} id={'msg-' + m.id}>
               <div className="msg-group">
                 <div className="msg-group-avatar-col">
                   {continued ? <span className="msg-continued-time">{m.time}</span> : <Avatar m={u} size="a30" withPresence />}
@@ -193,6 +182,12 @@ export default function Messages() {
                     <div className="msg-head">
                       <span className="msg-name name-link" onClick={() => openModal(<MemberProfileModal memberId={u.id} />)}>{u.name}</span>
                       <span className="msg-time">{m.time}</span>
+                    </div>
+                  )}
+                  {quoted && (
+                    <div className="msg-quote" onClick={() => scrollToMessage(quoted.id)}>
+                      <span className="msg-quote-name">{member(db, quoted.user).name}</span>
+                      <span className="msg-quote-text">{quoted.file ? '📎 ' + quoted.file.name : quoted.text}</span>
                     </div>
                   )}
                   <div className="msg-text">{m.text}</div>
@@ -214,65 +209,52 @@ export default function Messages() {
                       ))}
                     </div>
                   )}
-                  {(replies.length > 0 || isOpen) && (
-                    <div className={`thread-toggle${isOpen ? ' open' : ''}`} onClick={() => toggleThread(m.id)}>
-                      <Icon name="chevron" />
-                      {replies.length > 0 ? `${replies.length} ${t('replies')}` : t('replyInThread')}
-                    </div>
-                  )}
-                  {isOpen && (
-                    <div className="msg-thread-inline">
-                      {replies.map(r => {
-                        const ru = member(db, r.user);
-                        return (
-                          <div className="msg" key={r.id}>
-                            <Avatar m={ru} size="a30" withPresence />
-                            <div style={{ minWidth: 0 }}>
-                              <div className="msg-head">
-                                <span className="msg-name name-link" onClick={() => openModal(<MemberProfileModal memberId={ru.id} />)}>{ru.name}</span>
-                                <span className="msg-time">{r.time}</span>
-                              </div>
-                              <div className="msg-text">{r.text}</div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      <div className="msg-thread-reply-bar">
-                        <input
-                          placeholder={t('replyInThread')}
-                          value={replyDrafts[m.id] || ''}
-                          onChange={e => setReplyDrafts(prev => ({ ...prev, [m.id]: e.target.value }))}
-                          onKeyDown={e => { if (e.key === 'Enter') sendThreadReply(m.id); }}
-                        />
-                        <button onClick={() => sendThreadReply(m.id)}><Icon name="send" /></button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="msg-hover-toolbar">
                 {QUICK_REACTIONS.map(emoji => (
                   <button key={emoji} className="msg-hover-btn" title={emoji} onClick={() => toggleReaction(m.id, emoji)}>{emoji}</button>
                 ))}
-                <button className="msg-hover-btn icon-only" title={t('replyInThread')} onClick={() => toggleThread(m.id)}>
-                  <Icon name="messages" />
-                </button>
+                {hasGuestExecute(user, 'messages') && (
+                  <button className="msg-hover-btn icon-only" title={t('reply')} onClick={() => startReply(m.id)}>
+                    <Icon name="reply" />
+                  </button>
+                )}
               </div>
             </div>
           );
         })}
       </div>
       <div className="typing-note" id="typing-note">{typingNote}</div>
-      <div className="chat-input-bar">
-        <input
-          id="chat-input" placeholder={t('messagePlaceholder') + ' ' + label}
-          value={input} onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }}
-        />
-        <button className="chat-tool" title={t('attachFile')} onClick={() => fileInputRef.current?.click()}><Icon name="clip" /></button>
-        <input type="file" ref={fileInputRef} hidden onChange={attachChatFile} />
-        <button className="chat-tool" title={t('send')} onClick={() => sendMessage()} style={{ color: 'var(--accent)' }}><Icon name="send" /></button>
-      </div>
+      {hasGuestExecute(user, 'messages') ? (
+        <div className="chat-input-bar-wrap">
+          {replyingTo != null && (() => {
+            const rm = msgs.find(x => x.id === replyingTo);
+            if (!rm) return null;
+            return (
+              <div className="reply-preview">
+                <div className="reply-preview-body">
+                  <span className="reply-preview-name">{t('replyingTo')} {member(db, rm.user).name}</span>
+                  <span className="reply-preview-text">{rm.file ? '📎 ' + rm.file.name : rm.text}</span>
+                </div>
+                <button className="reply-preview-close" onClick={() => setReplyingTo(null)} title={t('cancel')}><Icon name="close" /></button>
+              </div>
+            );
+          })()}
+          <div className="chat-input-bar">
+            <input
+              id="chat-input" ref={inputRef} placeholder={t('messagePlaceholder') + ' ' + label}
+              value={input} onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }}
+            />
+            <button className="chat-tool" title={t('attachFile')} onClick={() => fileInputRef.current?.click()}><Icon name="clip" /></button>
+            <input type="file" ref={fileInputRef} hidden onChange={attachChatFile} />
+            <button className="chat-tool" title={t('send')} onClick={() => sendMessage()} style={{ color: 'var(--accent)' }}><Icon name="send" /></button>
+          </div>
+        </div>
+      ) : (
+        <div className="demo-hint" style={{ margin: 12 }}>{t('viewOnlyAccess')}</div>
+      )}
     </div>
   );
 }

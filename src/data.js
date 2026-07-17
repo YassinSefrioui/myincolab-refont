@@ -145,16 +145,14 @@ export const SEED = {
       { id: 1, user: 'ava',    text: 'Morning team — pushed the updated pricing doc, take a look before standup', time: '9:02', reactions: [{ emoji: '👍', users: ['you', 'priya'] }] },
       { id: 2, user: 'you',    text: 'On it. Quick q: are we still doing the annual discount at 20%?', time: '9:05' },
       { id: 3, user: 'ava',    text: 'Yep, 20% holds. Marcus is folding it into the onboarding flow too', time: '9:06' },
-      { id: 4, user: 'marcus', text: 'Confirmed — mockups for that screen are in the Product Launch board', time: '9:11',
-        threadReplies: [
-          { id: 1, user: 'priya', text: "Nice, I'll update the staging env accordingly", time: '9:15' },
-          { id: 2, user: 'tomas', text: 'Should I flag this in the eng channel too?', time: '9:20' },
-          { id: 3, user: 'marcus', text: 'Yes please, cross-post it', time: '9:22' },
-          { id: 4, user: 'ava', text: 'Thanks for closing the loop 👍', time: '9:30' },
-        ] },
-      { id: 5, user: 'priya',  text: 'Billing API supports the discount code param now, staging is live', time: '9:40', file: { name: 'billing-api-notes.pdf', size: '214 KB' }, reactions: [{ emoji: '🎉', users: ['ava'] }] },
-      { id: 6, user: 'you',    text: 'Nice, testing it against checkout this afternoon', time: '9:42' },
-      { id: 7, user: 'tomas',  text: 'Staging env is back up after the migration', time: '11:20' },
+      { id: 4, user: 'marcus', text: 'Confirmed — mockups for that screen are in the Product Launch board', time: '9:11' },
+      { id: 5, user: 'priya',  text: "Nice, I'll update the staging env accordingly", time: '9:15', replyTo: 4 },
+      { id: 6, user: 'tomas',  text: 'Should I flag this in the eng channel too?', time: '9:20', replyTo: 4 },
+      { id: 7, user: 'marcus', text: 'Yes please, cross-post it', time: '9:22', replyTo: 6 },
+      { id: 8, user: 'ava',    text: 'Thanks for closing the loop 👍', time: '9:30' },
+      { id: 9, user: 'priya',  text: 'Billing API supports the discount code param now, staging is live', time: '9:40', file: { name: 'billing-api-notes.pdf', size: '214 KB' }, reactions: [{ emoji: '🎉', users: ['ava'] }] },
+      { id: 10, user: 'you',   text: 'Nice, testing it against checkout this afternoon', time: '9:42', replyTo: 9 },
+      { id: 11, user: 'tomas', text: 'Staging env is back up after the migration', time: '11:20' },
     ],
     site: [
       { id: 1, user: 'marcus', text: 'Moodboard partagé, direction "clair & minimal" retenue', time: 'Hier' },
@@ -233,7 +231,12 @@ export const SEED = {
   ],
 
   guestCodes: [
-    { id: 1, code: 'GUEST-7F2K', createdBy: 'you', uses: 2, max: 5, active: true, firstName: '', lastName: '', allowedProjectIds: null, allowedViews: null },
+    {
+      id: 1, code: 'GUEST-7F2K', createdBy: 'you', uses: 2, max: 5, active: true,
+      name: '', email: '', validityType: 'time', durationDays: null, expiresAt: null,
+      scopeProjectId: null, scopeGroupId: null,
+      permissions: { projects: 'execute', files: 'execute', messages: 'execute', meet: 'execute', calendar: 'execute', groups: 'execute', announcements: 'execute' },
+    },
   ],
 
   timezones: [

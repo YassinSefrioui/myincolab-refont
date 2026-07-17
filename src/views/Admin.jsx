@@ -2,11 +2,12 @@ import { useState } from 'react';
 import Avatar from '../components/Avatar.jsx';
 import MemberProfileModal from '../components/MemberProfileModal.jsx';
 import { ModalHeader } from '../components/Modal.jsx';
-import { allCards, departmentName, member, projectOverdueCount, projectProgress } from '../lib/helpers.js';
+import { allCards, departmentName, GUEST_PERMISSION_KEYS, member, projectOverdueCount, projectProgress } from '../lib/helpers.js';
 import { useApp } from '../state/AppContext.jsx';
 
 const AVATAR_COLORS = ['#f0a04b', '#5b8def', '#9b7bf0', '#4bb37a', '#e0607a', '#2a9d8f', '#d18334', '#7c96f5'];
-const GUEST_FEATURE_KEYS = ['home', 'projects', 'messages', 'files', 'meet', 'calendar', 'groups', 'announcements', 'tutorial'];
+const DURATION_CHOICES = [1, 2, 3, 7, 14, 30];
+const PERM_LEVELS = ['none', 'see', 'execute'];
 
 function NewUserModal() {
   const { db, updateDB, closeModal, logAudit, toast, prefs, t } = useApp();
@@ -130,9 +131,7 @@ function AdminDashboard({ db, openModal, setUi, updateDB, user, toast, t }) {
     : 0;
 
   function quickGenerateGuestCode() {
-    const code = 'GUEST-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-    updateDB(draft => { draft.guestCodes.unshift({ id: Date.now(), code, createdBy: user.id, uses: 0, max: 5, active: true, firstName: '', lastName: '', allowedProjectIds: null, allowedViews: null }); });
-    toast(t('generateCode') + ' ✓');
+    openModal(<GuestCodeModal />, { wide: true });
   }
   function exportAuditCsv() {
     const rows = [['action', 'user', 'detail', 'time'], ...db.auditLogs.map(l => [l.action, member(db, l.user).name, l.detail, l.time])];
@@ -399,72 +398,117 @@ function AdminAudit({ db, t }) {
   );
 }
 
-function GuestAccessModal({ guestId }) {
-  const { db, updateDB, closeModal, toast, t } = useApp();
-  const gc = db.guestCodes.find(g => g.id === guestId);
-  const [firstName, setFirstName] = useState(gc ? gc.firstName || '' : '');
-  const [lastName, setLastName] = useState(gc ? gc.lastName || '' : '');
-  const [restrictProjects, setRestrictProjects] = useState(!!gc && Array.isArray(gc.allowedProjectIds));
-  const [projectIds, setProjectIds] = useState((gc && gc.allowedProjectIds) || []);
-  const [restrictFeatures, setRestrictFeatures] = useState(!!gc && Array.isArray(gc.allowedViews));
-  const [featureKeys, setFeatureKeys] = useState((gc && gc.allowedViews) || []);
+function GuestCodeModal({ guestId }) {
+  const { db, user, updateDB, closeModal, toast, t } = useApp();
+  const gc = guestId ? db.guestCodes.find(g => g.id === guestId) : null;
+  const isCreate = !guestId;
+  if (guestId && !gc) return null;
 
-  if (!gc) return null;
+  const [name, setName] = useState(gc ? gc.name || '' : '');
+  const [email, setEmail] = useState(gc ? gc.email || '' : '');
+  const [validityType, setValidityType] = useState(gc ? gc.validityType || 'time' : 'time');
+  const [durationDays, setDurationDays] = useState(gc ? gc.durationDays || 7 : 7);
+  const [scopeProjectId, setScopeProjectId] = useState(gc ? gc.scopeProjectId || '' : '');
+  const [scopeGroupId, setScopeGroupId] = useState(gc ? gc.scopeGroupId || '' : '');
+  const [permissions, setPermissions] = useState(
+    gc ? { ...gc.permissions } : Object.fromEntries(GUEST_PERMISSION_KEYS.map(k => [k, 'none']))
+  );
 
-  function toggleProject(id) { setProjectIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]); }
-  function toggleFeature(key) { setFeatureKeys(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]); }
+  function setLevel(key, level) { setPermissions(prev => ({ ...prev, [key]: level })); }
 
   function save() {
-    updateDB(draft => {
-      const d = draft.guestCodes.find(x => x.id === guestId);
-      if (!d) return;
-      d.firstName = firstName.trim();
-      d.lastName = lastName.trim();
-      d.allowedProjectIds = restrictProjects ? projectIds : null;
-      d.allowedViews = restrictFeatures ? featureKeys : null;
-    });
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
+    const payload = {
+      name: trimmedName, email: email.trim(), validityType,
+      durationDays: validityType === 'time' ? durationDays : null,
+      expiresAt: validityType === 'time' && durationDays ? Date.now() + durationDays * 86400000 : null,
+      scopeProjectId: scopeProjectId || null,
+      scopeGroupId: validityType === 'group' ? (scopeGroupId || null) : null,
+      permissions,
+    };
+    if (isCreate) {
+      const code = 'GUEST-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+      updateDB(draft => {
+        draft.guestCodes.unshift({ id: Date.now(), code, createdBy: user.id, uses: 0, max: 5, active: true, ...payload });
+      });
+      toast(t('generateCode') + ' ✓');
+    } else {
+      updateDB(draft => {
+        const d = draft.guestCodes.find(x => x.id === guestId);
+        if (d) Object.assign(d, payload);
+      });
+      toast(t('accessUpdated'));
+    }
     closeModal();
-    toast(t('accessUpdated'));
   }
 
   return (
     <>
-      <ModalHeader title={t('guestAccessSettings')} />
-      <div className="section-label" style={{ margin: '0 0 6px' }}>{t('guestIdentity')}</div>
-      <label className="field-label">{t('firstName')}</label>
-      <input className="input" value={firstName} onChange={e => setFirstName(e.target.value)} autoFocus />
-      <label className="field-label">{t('lastName')}</label>
-      <input className="input" value={lastName} onChange={e => setLastName(e.target.value)} />
+      <ModalHeader title={isCreate ? t('generateGuestCode') : t('guestAccessSettings')} />
+      <label className="field-label">{t('guestFullName')} *</label>
+      <input className="input" value={name} onChange={e => setName(e.target.value)} autoFocus />
+      <label className="field-label">{t('guestEmail')}</label>
+      <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} />
 
-      <label className="field-label" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 16 }}>
-        <input type="checkbox" checked={restrictProjects} onChange={e => setRestrictProjects(e.target.checked)} /> {t('restrictProjects')}
-      </label>
-      {restrictProjects ? (
-        <div className="card" style={{ padding: 10, maxHeight: 160, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {db.projects.filter(p => !p.archived).map(p => (
-            <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, cursor: 'pointer' }}>
-              <input type="checkbox" checked={projectIds.includes(p.id)} onChange={() => toggleProject(p.id)} /> {p.name}
-            </label>
-          ))}
-        </div>
-      ) : <p style={{ fontSize: 11, color: 'var(--muted)', margin: '2px 0 0' }}>{t('allProjectsAccess')}</p>}
+      <div className="guest-section-label">{t('validityType')} *</div>
+      <div className="tabs">
+        {[['time', t('timeBased')], ['project', t('projectBased')], ['group', t('groupBased')]].map(([k, lbl]) => (
+          <button key={k} type="button" className={`tab${validityType === k ? ' active' : ''}`} onClick={() => setValidityType(k)}>{lbl}</button>
+        ))}
+      </div>
 
-      <label className="field-label" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 16 }}>
-        <input type="checkbox" checked={restrictFeatures} onChange={e => setRestrictFeatures(e.target.checked)} /> {t('restrictFeatures')}
-      </label>
-      {restrictFeatures ? (
-        <div className="card" style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {GUEST_FEATURE_KEYS.map(k => (
-            <label key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, cursor: 'pointer' }}>
-              <input type="checkbox" checked={featureKeys.includes(k)} onChange={() => toggleFeature(k)} /> {t(k)}
-            </label>
-          ))}
-        </div>
-      ) : <p style={{ fontSize: 11, color: 'var(--muted)', margin: '2px 0 0' }}>{t('allFeaturesAccess')}</p>}
+      {validityType === 'time' && (
+        <>
+          <label className="field-label">{t('duration')}</label>
+          <div className="chip-group">
+            {DURATION_CHOICES.map(d => (
+              <button key={d} type="button" className={`chip-btn${durationDays === d ? ' active' : ''}`} onClick={() => setDurationDays(d)}>
+                {d}{t('dayAbbrev')}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {validityType === 'group' && (
+        <>
+          <label className="field-label">{t('groupOptional')}</label>
+          <select className="select" value={scopeGroupId} onChange={e => setScopeGroupId(e.target.value)}>
+            <option value="">{t('noSpecificGroup')}</option>
+            {db.groupChats.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+        </>
+      )}
+
+      <label className="field-label">{t('projectOptional')}</label>
+      <select className="select" value={scopeProjectId} onChange={e => setScopeProjectId(e.target.value)}>
+        <option value="">{t('noSpecificProject')}</option>
+        {db.projects.filter(p => !p.archived).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+      </select>
+
+      <div className="guest-section-label">{t('accessPermissions')}</div>
+      <p style={{ fontSize: 11, color: 'var(--muted)', margin: '0 0 6px' }}>{t('accessPermissionsHint')}</p>
+      <div className="perm-grid">
+        {GUEST_PERMISSION_KEYS.map(k => (
+          <div className="perm-row" key={k}>
+            <span className="perm-row-label">{t(k)}</span>
+            <div className="perm-seg">
+              {PERM_LEVELS.map(lvl => (
+                <button
+                  key={lvl} type="button"
+                  className={`perm-btn lvl-${lvl}${permissions[k] === lvl ? ' active' : ''}`}
+                  onClick={() => setLevel(k, lvl)}
+                >{t('level' + lvl[0].toUpperCase() + lvl.slice(1))}</button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
 
       <div className="modal-foot">
         <button className="btn btn-ghost" onClick={closeModal}>{t('cancel')}</button>
-        <button className="btn btn-primary" onClick={save}>{t('save')}</button>
+        <button className="btn btn-primary" onClick={save} disabled={!name.trim()}>{isCreate ? t('generate') : t('save')}</button>
       </div>
     </>
   );
@@ -472,10 +516,8 @@ function GuestAccessModal({ guestId }) {
 
 function AdminGuests({ db, updateDB, openModal, user, toast, t }) {
   const allowed = db.settings?.allowGuestCodes !== false;
-  function generateGuestCode() {
-    const code = 'GUEST-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-    updateDB(draft => { draft.guestCodes.unshift({ id: Date.now(), code, createdBy: user.id, uses: 0, max: 5, active: true, firstName: '', lastName: '', allowedProjectIds: null, allowedViews: null }); });
-    toast('Code généré ✓');
+  function openGenerateModal() {
+    openModal(<GuestCodeModal />, { wide: true });
   }
   function copyGuestCode(code) {
     if (navigator.clipboard) navigator.clipboard.writeText(code);
@@ -485,13 +527,13 @@ function AdminGuests({ db, updateDB, openModal, user, toast, t }) {
     updateDB(draft => { const g = draft.guestCodes.find(x => x.id === id); g.active = !g.active; });
   }
   function configureAccess(id) {
-    openModal(<GuestAccessModal guestId={id} />, { wide: true });
+    openModal(<GuestCodeModal guestId={id} />, { wide: true });
   }
   return (
     <>
       <div className="boards-head">
         <h2 className="page-title" style={{ margin: 0 }}>{t('guestCodes')}</h2>
-        <button className="btn btn-primary btn-sm" onClick={generateGuestCode} disabled={!allowed}>+ {t('generateCode')}</button>
+        <button className="btn btn-primary btn-sm" onClick={openGenerateModal} disabled={!allowed}>+ {t('generateCode')}</button>
       </div>
       {!allowed && <div className="demo-hint" style={{ marginBottom: 12 }}>{t('guestCodesDisabledNote')}</div>}
       <div className="card" style={{ padding: '4px 16px' }}>
@@ -501,7 +543,7 @@ function AdminGuests({ db, updateDB, openModal, user, toast, t }) {
             {db.guestCodes.map(g => (
               <tr key={g.id}>
                 <td style={{ fontFamily: 'ui-monospace,monospace', fontWeight: 700 }}>{g.code}</td>
-                <td>{[g.firstName, g.lastName].filter(Boolean).join(' ') || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
+                <td>{g.name || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
                 <td>{member(db, g.createdBy).name}</td>
                 <td>{g.uses}/{g.max}</td>
                 <td><span className="tag-soft" style={g.active ? { background: 'rgba(75,179,122,.15)', color: 'var(--success)' } : { background: 'rgba(229,72,77,.15)', color: 'var(--danger)' }}>{g.active ? t('active') : t('locked')}</span></td>

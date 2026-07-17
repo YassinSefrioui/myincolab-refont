@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import Icon from '../components/Icon.jsx';
 import { ModalHeader } from '../components/Modal.jsx';
 import MemberPicker from '../components/MemberPicker.jsx';
-import { fileKind, fmtDateTime, member, nextId } from '../lib/helpers.js';
+import { fileKind, fmtDateTime, hasGuestExecute, member, nextId } from '../lib/helpers.js';
 import { useApp } from '../state/AppContext.jsx';
 
 function NewFolderModal({ parentId }) {
@@ -140,11 +140,13 @@ export default function Files() {
     <div className="view-anim">
       <div className="boards-head">
         <h2 className="page-title" style={{ margin: 0 }}>{t('files')}</h2>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-ghost btn-sm" onClick={createFolder}><Icon name="folder" style={{ width: 13, height: 13 }} /> {t('newFolder')}</button>
-          <button className="btn btn-primary btn-sm" onClick={() => uploadRef.current?.click()}><Icon name="upload" style={{ width: 13, height: 13 }} /> {t('upload')}</button>
-          <input type="file" ref={uploadRef} hidden onChange={uploadFile} />
-        </div>
+        {hasGuestExecute(user, 'files') && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-ghost btn-sm" onClick={createFolder}><Icon name="folder" style={{ width: 13, height: 13 }} /> {t('newFolder')}</button>
+            <button className="btn btn-primary btn-sm" onClick={() => uploadRef.current?.click()}><Icon name="upload" style={{ width: 13, height: 13 }} /> {t('upload')}</button>
+            <input type="file" ref={uploadRef} hidden onChange={uploadFile} />
+          </div>
+        )}
       </div>
       <div className="tabs">
         {tabs.map(([k, lbl]) => (

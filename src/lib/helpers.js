@@ -207,16 +207,32 @@ export function previewText(db, m) {
   return m.text.length > 42 ? m.text.slice(0, 42) + '…' : m.text;
 }
 
+export const GUEST_PERMISSION_KEYS = ['projects', 'files', 'messages', 'meet', 'calendar', 'groups', 'announcements'];
+
+export function isGuestCodeExpired(gc) {
+  return !!(gc && gc.validityType === 'time' && gc.expiresAt && Date.now() > gc.expiresAt);
+}
+
 export function buildGuestUser(gc = {}) {
-  const fullName = [gc.firstName, gc.lastName].filter(Boolean).join(' ').trim() || 'Invité';
-  const initials = ((gc.firstName || '')[0] || '') + ((gc.lastName || '')[0] || '');
+  const nameParts = (gc.name || '').trim().split(/\s+/).filter(Boolean);
+  const fullName = nameParts.join(' ') || 'Invité';
+  const initials = ((nameParts[0] || '')[0] || '') + ((nameParts[1] || '')[0] || '');
+  const perms = gc.permissions || {};
+  const allowedViews = GUEST_PERMISSION_KEYS.filter(k => perms[k] && perms[k] !== 'none');
   return {
     id: 'guest', name: fullName, initials: (initials || 'IN').toUpperCase(), color: '#9298ab',
-    role: 'GUEST', email: 'guest@incolab.com', presence: 'online',
+    role: 'GUEST', email: gc.email || 'guest@incolab.com', presence: 'online',
     guestCodeId: gc.id || null,
-    allowedProjectIds: gc.allowedProjectIds || null,
-    allowedViews: gc.allowedViews || null,
+    allowedProjectIds: gc.scopeProjectId ? [gc.scopeProjectId] : null,
+    allowedGroupIds: gc.scopeGroupId ? [gc.scopeGroupId] : null,
+    allowedViews,
+    guestPermissions: perms,
   };
+}
+
+export function hasGuestExecute(user, key) {
+  if (!user || user.role !== 'GUEST') return true;
+  return !!(user.guestPermissions && user.guestPermissions[key] === 'execute');
 }
 
 export function visibleProjectsFor(db, user) {

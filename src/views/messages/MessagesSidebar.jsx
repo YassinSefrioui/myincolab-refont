@@ -3,7 +3,7 @@ import Avatar from '../../components/Avatar.jsx';
 import { ModalHeader } from '../../components/Modal.jsx';
 import MemberPicker from '../../components/MemberPicker.jsx';
 import MemberProfileModal from '../../components/MemberProfileModal.jsx';
-import { lastMessage, member, previewText, unreadCount } from '../../lib/helpers.js';
+import { hasGuestExecute, lastMessage, member, previewText, unreadCount, visibleProjectsFor } from '../../lib/helpers.js';
 import { useApp } from '../../state/AppContext.jsx';
 import { useState } from 'react';
 
@@ -94,11 +94,13 @@ function ConvRow({ active, icon, unread, name, convId, onClick, memberId }) {
 }
 
 export default function MessagesSidebar() {
-  const { db, ui, setUi, go, openModal, t } = useApp();
+  const { db, user, ui, setUi, go, openModal, t } = useApp();
 
   function switchConv(id) { setUi({ activeConvId: id }); }
 
-  const activeProjects = db.projects.filter(p => !p.archived);
+  const activeProjects = visibleProjectsFor(db, user).filter(p => !p.archived);
+  const canEditMessages = hasGuestExecute(user, 'messages');
+  const groupChats = user.allowedGroupIds ? db.groupChats.filter(g => user.allowedGroupIds.includes(g.id)) : db.groupChats;
 
   return (
     <>
@@ -116,7 +118,7 @@ export default function MessagesSidebar() {
 
       <div className="sec-head" style={{ marginTop: 10 }}>
         <div className="section-label">{t('directMessages')}</div>
-        <button className="sec-add" title={t('newConversation')} onClick={() => openModal(<NewDMModal />)}>＋</button>
+        {canEditMessages && <button className="sec-add" title={t('newConversation')} onClick={() => openModal(<NewDMModal />)}>＋</button>}
       </div>
       {db.dms.map(d => {
         const m = member(db, d.user);
@@ -131,9 +133,9 @@ export default function MessagesSidebar() {
 
       <div className="sec-head" style={{ marginTop: 10 }}>
         <div className="section-label">{t('groupChats')}</div>
-        <button className="sec-add" onClick={() => openModal(<NewGroupChatModal />, { wide: true })}>＋</button>
+        {canEditMessages && <button className="sec-add" onClick={() => openModal(<NewGroupChatModal />, { wide: true })}>＋</button>}
       </div>
-      {db.groupChats.map(g => (
+      {groupChats.map(g => (
         <ConvRow
           key={g.id} convId={g.id} active={ui.activeConvId === g.id} unread={unreadCount(db, g.id)}
           icon={<span className="chan-item-icon muted">👥</span>}

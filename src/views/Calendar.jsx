@@ -5,7 +5,7 @@ import { ModalHeader } from '../components/Modal.jsx';
 import MemberPicker from '../components/MemberPicker.jsx';
 import DatePicker from '../components/DatePicker.jsx';
 import TimePicker from '../components/TimePicker.jsx';
-import { DOW_LABELS, daysLeft, member, nextId, toISODate } from '../lib/helpers.js';
+import { DOW_LABELS, daysLeft, hasGuestExecute, member, nextId, toISODate } from '../lib/helpers.js';
 import { useApp } from '../state/AppContext.jsx';
 
 function isoFromOffset(n) {
@@ -133,7 +133,8 @@ export function NewEventModal({ initialOffset = 0, eventId = null, title: modalT
 }
 
 export default function Calendar() {
-  const { db, prefs, ui, setUi, openModal, t } = useApp();
+  const { db, user, prefs, ui, setUi, openModal, t } = useApp();
+  const canEditCal = hasGuestExecute(user, 'calendar');
   const cur = ui.calCursor;
   const y = cur.getFullYear(), m = cur.getMonth();
   const today = new Date();
@@ -162,6 +163,7 @@ export default function Calendar() {
   function calMove(delta) { setUi({ calCursor: new Date(y, m + delta, 1) }); }
   function calToday() { setUi({ calCursor: new Date() }); }
   function openNewEventModal(day = null) {
+    if (!canEditCal) return;
     const initialOffset = day !== null ? Math.max(0, day - new Date().getDate()) : 0;
     openModal(<NewEventModal initialOffset={initialOffset} />);
   }
@@ -174,7 +176,7 @@ export default function Calendar() {
     const isToday = today.getFullYear() === y && today.getMonth() === m && today.getDate() === day;
     const evts = eventsOn(day);
     cells.push(
-      <div className={`cal-cell${isToday ? ' today' : ''}`} key={'day-' + day} onClick={() => openNewEventModal(day)} title={t('newEvent')}>
+      <div className={`cal-cell${isToday ? ' today' : ''}`} key={'day-' + day} onClick={() => openNewEventModal(day)} title={canEditCal ? t('newEvent') : ''}>
         <div className="cal-daynum">{day}</div>
         {evts.map(e => (
           <div className="cal-event" key={e.id} onClick={ev => { ev.stopPropagation(); showEvent(e.id); }}>
@@ -196,7 +198,7 @@ export default function Calendar() {
           <span className="cal-month">{monthName}</span>
           <button className="btn btn-ghost btn-sm" onClick={() => calMove(1)}>→</button>
           <button className="btn btn-ghost btn-sm" onClick={calToday}>{t('today')}</button>
-          <button className="btn btn-primary btn-sm" onClick={() => openNewEventModal()}>+ {t('newEvent')}</button>
+          {canEditCal && <button className="btn btn-primary btn-sm" onClick={() => openNewEventModal()}>+ {t('newEvent')}</button>}
         </div>
       </div>
       <div className="home-cols">

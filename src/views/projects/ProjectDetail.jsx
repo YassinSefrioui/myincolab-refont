@@ -9,17 +9,18 @@ import ProjectMenu from './ProjectMenu.jsx';
 import ProjectSwitcher from './ProjectSwitcher.jsx';
 import NewTaskModal from './NewTaskModal.jsx';
 import TaskModal from './TaskModal.jsx';
-import { allCards, departmentName, member, nextId, toISODate, fmtDate, unreadCount } from '../../lib/helpers.js';
+import { allCards, departmentName, hasGuestExecute, member, nextId, toISODate, fmtDate, unreadCount } from '../../lib/helpers.js';
 import { useApp } from '../../state/AppContext.jsx';
 
 function KanbanCard({ card, onOpen, onDragStart, onDragEnd, dragging }) {
-  const { db } = useApp();
+  const { db, user } = useApp();
   const m = member(db, card.assignee);
+  const canEdit = hasGuestExecute(user, 'projects');
   return (
     <div
       className={`kanban-card${dragging ? ' dragging' : ''}`}
-      draggable="true"
-      onDragStart={() => onDragStart(card.id)}
+      draggable={canEdit}
+      onDragStart={() => canEdit && onDragStart(card.id)}
       onDragEnd={onDragEnd}
       onClick={() => onOpen(card.id)}
     >
@@ -287,9 +288,11 @@ export default function ProjectDetail({ projectId, onSwitch, onBack }) {
             }}>{unreadCount(db, p.id)}</span>
           )}
         </button>
-        <button className="btn btn-primary" onClick={() => openNewTaskModal('backlog')}>
-          + {t('newTask')}
-        </button>
+        {hasGuestExecute(user, 'projects') && (
+          <button className="btn btn-primary" onClick={() => openNewTaskModal('backlog')}>
+            + {t('newTask')}
+          </button>
+        )}
         <ProjectMenu projectId={projectId} onAfterRemove={onBack} />
       </div>
       {p.description && <div style={{ fontSize: 12.5, color: 'var(--text-2)', margin: '6px 0 0' }}>{p.description}</div>}
@@ -329,7 +332,9 @@ export default function ProjectDetail({ projectId, onSwitch, onBack }) {
                   onDragEnd={() => setDragging(null)}
                 />
               ))}
-              <button className="add-card-btn" onClick={() => openNewTaskModal(col.id)}>{t('addCard')}</button>
+              {hasGuestExecute(user, 'projects') && (
+                <button className="add-card-btn" onClick={() => openNewTaskModal(col.id)}>{t('addCard')}</button>
+              )}
             </div>
           ))}
         </div>

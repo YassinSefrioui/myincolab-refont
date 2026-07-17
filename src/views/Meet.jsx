@@ -4,7 +4,7 @@ import Avatar from '../components/Avatar.jsx';
 import { ModalHeader } from '../components/Modal.jsx';
 import MemberPicker from '../components/MemberPicker.jsx';
 import { NewEventModal } from './Calendar.jsx';
-import { member } from '../lib/helpers.js';
+import { hasGuestExecute, member } from '../lib/helpers.js';
 import { useApp } from '../state/AppContext.jsx';
 
 function fmtElapsed(s) {
@@ -15,14 +15,17 @@ function fmtElapsed(s) {
 
 function MeetLobby({ db, user, onJoinEvent, onInstant, onSchedule, onEdit, t }) {
   const upcoming = db.events.slice().sort((a, b) => a.offset - b.offset).slice(0, 8);
+  const canMeet = hasGuestExecute(user, 'meet');
   return (
     <div className="view-anim">
       <div className="boards-head">
         <h2 className="page-title" style={{ margin: 0 }}>{t('meet')}</h2>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-ghost btn-sm" onClick={onSchedule}>+ {t('scheduleMeeting')}</button>
-          <button className="btn btn-primary btn-sm" onClick={onInstant}>+ {t('startInstantMeeting')}</button>
-        </div>
+        {canMeet && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-ghost btn-sm" onClick={onSchedule}>+ {t('scheduleMeeting')}</button>
+            <button className="btn btn-primary btn-sm" onClick={onInstant}>+ {t('startInstantMeeting')}</button>
+          </div>
+        )}
       </div>
       <div className="card">
         <div className="section-label">{t('upcomingMeetings')}</div>
@@ -44,7 +47,7 @@ function MeetLobby({ db, user, onJoinEvent, onInstant, onSchedule, onEdit, t }) 
                 {isHost && (
                   <button className="btn btn-ghost btn-sm" title={t('editEvent')} onClick={() => onEdit(e.id)}><Icon name="edit" style={{ width: 12, height: 12 }} /></button>
                 )}
-                <button className="btn btn-ghost btn-sm" onClick={() => onJoinEvent(e)}>{t('join')}</button>
+                {canMeet && <button className="btn btn-ghost btn-sm" onClick={() => onJoinEvent(e)}>{t('join')}</button>}
               </div>
             </div>
           );

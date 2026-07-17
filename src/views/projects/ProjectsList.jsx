@@ -3,7 +3,7 @@ import Icon from '../../components/Icon.jsx';
 import Avatar from '../../components/Avatar.jsx';
 import NewProjectModal from './NewProjectModal.jsx';
 import ProjectMenu from './ProjectMenu.jsx';
-import { allCards, member, projectDone, projectProgress, projectOverdueCount, visibleProjectsFor } from '../../lib/helpers.js';
+import { allCards, hasGuestExecute, member, projectDone, projectProgress, projectOverdueCount, visibleProjectsFor } from '../../lib/helpers.js';
 import { useApp } from '../../state/AppContext.jsx';
 
 function statusOf(p) {
@@ -65,7 +65,7 @@ export default function ProjectsList({ onOpenProject }) {
             {counts.active} {t('activeProjectsCount')} · {counts.overdue} {t('overdueCount')}
           </div>
         </div>
-        <button className="btn btn-primary" onClick={openNewProjectModal}>
+        <button className="btn btn-primary" onClick={openNewProjectModal} style={hasGuestExecute(user, 'projects') ? undefined : { display: 'none' }}>
           <Icon name="plus" style={{ width: 13, height: 13 }} /> {t('newProjectShort')}
         </button>
       </div>

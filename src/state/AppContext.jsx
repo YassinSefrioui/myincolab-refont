@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { SEED } from '../data.js';
 import { I18N } from '../i18n.js';
-import { buildGuestUser, nextId, nowTime } from '../lib/helpers.js';
+import { buildGuestUser, GUEST_PERMISSION_KEYS, isGuestCodeExpired, nextId, nowTime } from '../lib/helpers.js';
 
 const DEFAULT_HOME_WIDGETS = { clocks: true, activity: true, online: true, workload: true, decisions: true, myTasks: true, nextMeeting: true };
 
@@ -40,6 +40,18 @@ function migrateDB(db) {
     });
   }
   db.projects.forEach(p => { delete p.unread; });
+  // Aplatit l'ancien système de fils de discussion (threadReplies) en réponses citées inline.
+  Object.values(db.messagesByConv || {}).forEach(list => {
+    for (let i = list.length - 1; i >= 0; i--) {
+      const m = list[i];
+      if (Array.isArray(m.threadReplies) && m.threadReplies.length) {
+        let nid = nextId(list);
+        const flattened = m.threadReplies.map(r => ({ ...r, id: nid++, replyTo: m.id }));
+        list.splice(i + 1, 0, ...flattened);
+      }
+      delete m.threadReplies;
+    }
+  });
   db.files.forEach((f, i) => {
     if (f.ts) return;
     const txt = (f.time || '').toLowerCase();
@@ -57,10 +69,21 @@ function migrateDB(db) {
     delete e.hostId;
   });
   (db.guestCodes || []).forEach(g => {
-    if (g.firstName === undefined) g.firstName = '';
-    if (g.lastName === undefined) g.lastName = '';
-    if (g.allowedProjectIds === undefined) g.allowedProjectIds = null;
-    if (g.allowedViews === undefined) g.allowedViews = null;
+    if (!g.permissions) {
+      const name = [g.firstName, g.lastName].filter(Boolean).join(' ');
+      const oldProjectIds = Array.isArray(g.allowedProjectIds) ? g.allowedProjectIds : null;
+      const oldViews = Array.isArray(g.allowedViews) ? g.allowedViews : null;
+      g.name = name;
+      g.email = g.email || '';
+      g.validityType = 'time';
+      g.durationDays = null;
+      g.expiresAt = null;
+      g.scopeProjectId = oldProjectIds && oldProjectIds.length ? oldProjectIds[0] : null;
+      g.scopeGroupId = null;
+      g.permissions = {};
+      GUEST_PERMISSION_KEYS.forEach(k => { g.permissions[k] = (!oldViews || oldViews.includes(k)) ? 'execute' : 'none'; });
+      delete g.firstName; delete g.lastName; delete g.allowedProjectIds; delete g.allowedViews;
+    }
   });
   return db;
 }
@@ -75,7 +98,7 @@ function loadDB() {
   return seeded;
 }
 function loadPrefs() {
-  let prefs = { theme: 'light', lang: 'fr', fontSize: 'medium' };
+  let prefs = { theme: 'light', lang: 'en', fontSize: 'medium' };
   try {
     const raw = localStorage.getItem(PREFS_KEY);
     if (raw) prefs = Object.assign(prefs, JSON.parse(raw));
@@ -125,10 +148,13 @@ export function AppProvider({ children }) {
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (raw) {
         const { id, guestCodeId } = JSON.parse(raw);
-        const m = id === 'guest'
-          ? buildGuestUser(db.guestCodes.find(g => g.id === guestCodeId) || {})
-          : db.team.find(x => x.id === id);
-        if (m && !m.locked) setUser({ ...m });
+        if (id === 'guest') {
+          const gc = db.guestCodes.find(g => g.id === guestCodeId);
+          if (gc && gc.active && !isGuestCodeExpired(gc)) setUser(buildGuestUser(gc));
+        } else {
+          const m = db.team.find(x => x.id === id);
+          if (m && !m.locked) setUser({ ...m });
+        }
       }
     } catch (e) { /* session invalide */ }
     setBooted(true);

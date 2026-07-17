@@ -46,6 +46,12 @@ export const ICONS = {
   fileImage: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5h6l3 3v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-13a1 1 0 0 1 1-1Z"/><path d="M12 2.5v3h3"/><circle cx="8.1" cy="10.6" r=".9" fill="currentColor" stroke="none"/><path d="m6.5 14.5 2.3-2.3a1 1 0 0 1 1.4 0l.6.6M11 12.4l.7-.7a1 1 0 0 1 1.4 0l1 1"/></svg>',
   close: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m5 5 10 10M15 5 5 15"/></svg>',
   clock: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></svg>',
+  reply: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 5.5 3 10l5.5 4.5"/><path d="M3 10h8.5a4.5 4.5 0 0 1 4.5 4.5v.5"/></svg>',
+  settings: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.6"/><path d="M10 3v2M10 15v2M17 10h-2M5 10H3M14.8 5.2l-1.4 1.4M6.6 13.4l-1.4 1.4M14.8 14.8l-1.4-1.4M6.6 6.6 5.2 5.2"/></svg>',
+  presence: '<svg viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="5.5"/></svg>',
+  logout: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H4.5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1H8"/><path d="M13 14l4-4-4-4M17 10H7.5"/></svg>',
+  legal: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v14M4.5 5.5h11M6.5 5.5 4 10.5h5L6.5 5.5ZM13.5 5.5 11 10.5h5l-2.5-5ZM7 17h6"/></svg>',
+  lang: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3c2 2 2 12 0 14M10 3c-2 2-2 12 0 14"/></svg>',
 };
 
 export default function Icon({ name, className = '', style }) {

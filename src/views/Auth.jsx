@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Icon from '../components/Icon.jsx';
-import { buildGuestUser } from '../lib/helpers.js';
+import { buildGuestUser, isGuestCodeExpired } from '../lib/helpers.js';
 import { useApp } from '../state/AppContext.jsx';
 
 export default function Auth() {
@@ -23,7 +23,7 @@ export default function Auth() {
   function guestLogin() {
     const code = guestCode.trim().toUpperCase();
     const gc = db.guestCodes.find(g => g.code === code && g.active && g.uses < g.max);
-    if (!gc) { toast(t('loginFailed')); return; }
+    if (!gc || isGuestCodeExpired(gc)) { toast(t('loginFailed')); return; }
     updateDB(draft => { const dg = draft.guestCodes.find(g => g.id === gc.id); if (dg) dg.uses++; });
     startSession(buildGuestUser(gc));
   }
