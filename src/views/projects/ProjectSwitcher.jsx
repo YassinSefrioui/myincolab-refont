@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Icon from '../../components/Icon.jsx';
 import NewProjectModal from './NewProjectModal.jsx';
-import { projectDone, projectOverdueCount } from '../../lib/helpers.js';
+import { projectDone, projectOverdueCount, visibleProjectsFor } from '../../lib/helpers.js';
 import { useApp } from '../../state/AppContext.jsx';
 
 function statusOf(p) {
@@ -12,11 +12,11 @@ function statusOf(p) {
 }
 
 export default function ProjectSwitcher({ activeId, onSwitch }) {
-  const { db, openModal, t } = useApp();
+  const { db, user, openModal, t } = useApp();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const active = db.projects.find(p => p.id === activeId);
-  const options = db.projects.filter(p => !p.archived || p.id === activeId);
+  const options = visibleProjectsFor(db, user).filter(p => !p.archived || p.id === activeId);
 
   useEffect(() => {
     function onDown(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }

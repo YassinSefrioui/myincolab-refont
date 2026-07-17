@@ -10,7 +10,7 @@ const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase
  * - multi=true  : selected est un tableau d'ids, affiché en chips retirables.
  * - multi=false : selected est un id (ou null), affiché en chip unique.
  */
-export default function MemberPicker({ candidates, selected, onChange, multi = true, placeholder, autoFocus = false }) {
+export default function MemberPicker({ candidates, selected, onChange, multi = true, placeholder, autoFocus = false, max = null }) {
   const { db, t } = useApp();
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -50,6 +50,8 @@ export default function MemberPicker({ candidates, selected, onChange, multi = t
     else onChange(null);
   }
 
+  const atMax = max != null && selectedIds.length >= max;
+
   return (
     <div className="mp-wrap" ref={wrapRef}>
       {selectedIds.length > 0 && (
@@ -65,19 +67,21 @@ export default function MemberPicker({ candidates, selected, onChange, multi = t
           })}
         </div>
       )}
-      <input
-        className="input"
-        placeholder={placeholder || t('searchPeople')}
-        value={query}
-        autoFocus={autoFocus}
-        onFocus={() => setOpen(true)}
-        onChange={e => { setQuery(e.target.value); setOpen(true); }}
-        onKeyDown={e => {
-          if (e.key === 'Enter' && list.length === 1) { e.preventDefault(); pick(list[0].id); }
-          if (e.key === 'Escape') setOpen(false);
-        }}
-      />
-      {open && (
+      {!atMax && (
+        <input
+          className="input"
+          placeholder={placeholder || t('searchPeople')}
+          value={query}
+          autoFocus={autoFocus}
+          onFocus={() => setOpen(true)}
+          onChange={e => { setQuery(e.target.value); setOpen(true); }}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && list.length === 1) { e.preventDefault(); pick(list[0].id); }
+            if (e.key === 'Escape') setOpen(false);
+          }}
+        />
+      )}
+      {open && !atMax && (
         <div className="mp-list">
           {list.length ? list.map(m => (
             <button className="mp-item" key={m.id} onClick={() => pick(m.id)}>

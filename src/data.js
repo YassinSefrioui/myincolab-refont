@@ -191,10 +191,10 @@ export const SEED = {
   ],
 
   events: [
-    { id: 1, title: 'Product sync',      offset: 0, time: '14:00', allDay: false, with: ['ava', 'marcus', 'priya', 'tomas', 'jules'], hostId: 'you' },
-    { id: 2, title: 'Design review',     offset: 1, time: '10:30', allDay: false, with: ['marcus', 'you'], hostId: 'you' },
-    { id: 3, title: 'Sprint planning',   offset: 3, time: '09:30', allDay: false, with: ['priya', 'tomas', 'you'], hostId: 'you' },
-    { id: 4, title: 'Lancement Q3 🚀',   offset: 9, time: '',      allDay: true,  with: ['ava', 'marcus', 'priya', 'tomas', 'jules', 'you'], hostId: 'you' },
+    { id: 1, title: 'Product sync',      offset: 0, time: '14:00', allDay: false, with: ['ava', 'marcus', 'priya', 'tomas', 'jules'], hostIds: ['you'] },
+    { id: 2, title: 'Design review',     offset: 1, time: '10:30', allDay: false, with: ['marcus', 'you'], hostIds: ['you'] },
+    { id: 3, title: 'Sprint planning',   offset: 3, time: '09:30', allDay: false, with: ['priya', 'tomas', 'you'], hostIds: ['you'] },
+    { id: 4, title: 'Lancement Q3 🚀',   offset: 9, time: '',      allDay: true,  with: ['ava', 'marcus', 'priya', 'tomas', 'jules', 'you'], hostIds: ['you'] },
   ],
 
   groups: [
@@ -233,7 +233,7 @@ export const SEED = {
   ],
 
   guestCodes: [
-    { id: 1, code: 'GUEST-7F2K', createdBy: 'you', uses: 2, max: 5, active: true },
+    { id: 1, code: 'GUEST-7F2K', createdBy: 'you', uses: 2, max: 5, active: true, firstName: '', lastName: '', allowedProjectIds: null, allowedViews: null },
   ],
 
   timezones: [

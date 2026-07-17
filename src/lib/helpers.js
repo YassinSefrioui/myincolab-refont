@@ -206,3 +206,20 @@ export function previewText(db, m) {
   if (m.file) return '📎 ' + m.file.name;
   return m.text.length > 42 ? m.text.slice(0, 42) + '…' : m.text;
 }
+
+export function buildGuestUser(gc = {}) {
+  const fullName = [gc.firstName, gc.lastName].filter(Boolean).join(' ').trim() || 'Invité';
+  const initials = ((gc.firstName || '')[0] || '') + ((gc.lastName || '')[0] || '');
+  return {
+    id: 'guest', name: fullName, initials: (initials || 'IN').toUpperCase(), color: '#9298ab',
+    role: 'GUEST', email: 'guest@incolab.com', presence: 'online',
+    guestCodeId: gc.id || null,
+    allowedProjectIds: gc.allowedProjectIds || null,
+    allowedViews: gc.allowedViews || null,
+  };
+}
+
+export function visibleProjectsFor(db, user) {
+  if (!user || !user.allowedProjectIds) return db.projects;
+  return db.projects.filter(p => user.allowedProjectIds.includes(p.id));
+}

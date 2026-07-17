@@ -19,7 +19,10 @@ const NAV_ITEMS = [
 export default function NavRail() {
   const { db, user, ui, go, t } = useApp();
   if (!user) return null;
-  const items = NAV_ITEMS.filter(it => !it.adminOnly || user.role === 'ADMIN');
+  const items = NAV_ITEMS.filter(it =>
+    (!it.adminOnly || user.role === 'ADMIN') &&
+    (!user.allowedViews || user.allowedViews.includes(it.key))
+  );
   return (
     <nav id="left-nav" className="left-nav" aria-label="Navigation principale">
       <img className="nav-logo" src={`${import.meta.env.BASE_URL}logo.jpeg`} alt="INCO LAB" onClick={() => go('home')} />

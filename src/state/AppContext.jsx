@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { SEED } from '../data.js';
 import { I18N } from '../i18n.js';
-import { nextId, nowTime } from '../lib/helpers.js';
+import { buildGuestUser, nextId, nowTime } from '../lib/helpers.js';
 
 const DEFAULT_HOME_WIDGETS = { clocks: true, activity: true, online: true, workload: true, decisions: true, myTasks: true, nextMeeting: true };
 
@@ -52,7 +52,16 @@ function migrateDB(db) {
     else if (jMatch) hoursAgo = Number(jMatch[1]) * 24 + 2;
     f.ts = Date.now() - hoursAgo * 3600000;
   });
-  db.events.forEach(e => { if (!e.hostId) e.hostId = 'you'; });
+  db.events.forEach(e => {
+    if (!Array.isArray(e.hostIds)) e.hostIds = [e.hostId || 'you'];
+    delete e.hostId;
+  });
+  (db.guestCodes || []).forEach(g => {
+    if (g.firstName === undefined) g.firstName = '';
+    if (g.lastName === undefined) g.lastName = '';
+    if (g.allowedProjectIds === undefined) g.allowedProjectIds = null;
+    if (g.allowedViews === undefined) g.allowedViews = null;
+  });
   return db;
 }
 
@@ -115,9 +124,9 @@ export function AppProvider({ children }) {
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (raw) {
-        const { id } = JSON.parse(raw);
+        const { id, guestCodeId } = JSON.parse(raw);
         const m = id === 'guest'
-          ? { id: 'guest', name: 'Invité', initials: 'IN', color: '#9298ab', role: 'GUEST', email: 'guest@incolab.com', presence: 'online' }
+          ? buildGuestUser(db.guestCodes.find(g => g.id === guestCodeId) || {})
           : db.team.find(x => x.id === id);
         if (m && !m.locked) setUser({ ...m });
       }
@@ -190,7 +199,7 @@ export function AppProvider({ children }) {
 
   const startSession = useCallback(m => {
     setUser({ ...m });
-    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id: m.id })); } catch (e) { /* ignore */ }
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id: m.id, guestCodeId: m.guestCodeId || null })); } catch (e) { /* ignore */ }
     logAudit('LOGIN', m.email, false);
     setUi(prev => ({ ...prev, view: 'home' }));
     toast(t('welcome') + ', ' + m.name.split(' ')[0] + ' 👋');

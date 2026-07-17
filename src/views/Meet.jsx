@@ -27,15 +27,15 @@ function MeetLobby({ db, user, onJoinEvent, onInstant, onSchedule, onEdit, t }) 
       <div className="card">
         <div className="section-label">{t('upcomingMeetings')}</div>
         {upcoming.length ? upcoming.map(e => {
-          const isHost = e.hostId === user.id;
-          const host = member(db, e.hostId);
+          const isHost = e.hostIds.includes(user.id);
+          const hostNames = e.hostIds.map(id => (id === user.id ? t('you') : member(db, id).name)).join(', ');
           return (
             <div className="task-row" key={e.id}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>{e.title}</div>
                 <div style={{ fontSize: 11, color: 'var(--muted)' }}>
                   {(e.offset === 0 ? t('today') : '+' + e.offset + ' j') + (e.allDay ? ' · ' + t('allDay') : (e.time ? ' · ' + e.time : ''))}
-                  {' · ' + t('hostedBy') + ' ' + (isHost ? t('you') : host.name)}
+                  {' · ' + t('hostedBy') + ' ' + hostNames}
                 </div>
                 {e.description && <div style={{ fontSize: 11.5, color: 'var(--text-2)', marginTop: 2 }}>{e.description}</div>}
               </div>
@@ -83,7 +83,6 @@ function ActiveCallView({ call, onLeave }) {
   const [elapsed, setElapsed] = useState(0);
   const [speakingId, setSpeakingId] = useState(null);
   const [shareOn, setShareOn] = useState(false);
-  const [handUp, setHandUp] = useState(false);
   const [extras, setExtras] = useState([]);
 
   const everyone = [...call.participants, ...extras];
@@ -125,7 +124,6 @@ function ActiveCallView({ call, onLeave }) {
     setShareOn(s => !s);
     toast(!shareOn ? t('presenting') : t('stopShare') + ' ✓');
   }
-  function toggleHand() { setHandUp(h => !h); }
   function leaveCall() { toast(t('leaveCall') + ' ✓'); onLeave(); }
   function copyCallLink() {
     const link = 'https://myincolab.com/call/' + Math.random().toString(36).slice(2, 10);
@@ -148,7 +146,6 @@ function ActiveCallView({ call, onLeave }) {
             <span className="cam-off-note"><Icon name="camOff" /></span>
           </>
         )}
-        {isMe && handUp && <span className="hand-badge" title={t('raiseHand')}><Icon name="hand" /></span>}
         <span className="name-chip">
           {m.name}{isMe ? ' (vous)' : ''}
           {speaking && <span className="speak-wave"><i /><i /><i /></span>}
@@ -207,9 +204,6 @@ function ActiveCallView({ call, onLeave }) {
         </button>
         <button className={`ctl-btn${shareOn ? ' active' : ''}`} onClick={toggleShare} title={shareOn ? t('stopShare') : t('shareScreen')}>
           <Icon name="screen" />
-        </button>
-        <button className={`ctl-btn${handUp ? ' active' : ''}`} onClick={toggleHand} title={handUp ? t('lowerHand') : t('raiseHand')}>
-          <Icon name="hand" />
         </button>
         <span className="meet-sep" />
         <button className="ctl-btn leave" onClick={leaveCall} title={t('leaveCall')}>

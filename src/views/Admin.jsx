@@ -6,6 +6,7 @@ import { allCards, departmentName, member, projectOverdueCount, projectProgress 
 import { useApp } from '../state/AppContext.jsx';
 
 const AVATAR_COLORS = ['#f0a04b', '#5b8def', '#9b7bf0', '#4bb37a', '#e0607a', '#2a9d8f', '#d18334', '#7c96f5'];
+const GUEST_FEATURE_KEYS = ['home', 'projects', 'messages', 'files', 'meet', 'calendar', 'groups', 'announcements', 'tutorial'];
 
 function NewUserModal() {
   const { db, updateDB, closeModal, logAudit, toast, prefs, t } = useApp();
@@ -130,7 +131,7 @@ function AdminDashboard({ db, openModal, setUi, updateDB, user, toast, t }) {
 
   function quickGenerateGuestCode() {
     const code = 'GUEST-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-    updateDB(draft => { draft.guestCodes.unshift({ id: Date.now(), code, createdBy: user.id, uses: 0, max: 5, active: true }); });
+    updateDB(draft => { draft.guestCodes.unshift({ id: Date.now(), code, createdBy: user.id, uses: 0, max: 5, active: true, firstName: '', lastName: '', allowedProjectIds: null, allowedViews: null }); });
     toast(t('generateCode') + ' ✓');
   }
   function exportAuditCsv() {
@@ -398,11 +399,82 @@ function AdminAudit({ db, t }) {
   );
 }
 
-function AdminGuests({ db, updateDB, user, toast, t }) {
+function GuestAccessModal({ guestId }) {
+  const { db, updateDB, closeModal, toast, t } = useApp();
+  const gc = db.guestCodes.find(g => g.id === guestId);
+  const [firstName, setFirstName] = useState(gc ? gc.firstName || '' : '');
+  const [lastName, setLastName] = useState(gc ? gc.lastName || '' : '');
+  const [restrictProjects, setRestrictProjects] = useState(!!gc && Array.isArray(gc.allowedProjectIds));
+  const [projectIds, setProjectIds] = useState((gc && gc.allowedProjectIds) || []);
+  const [restrictFeatures, setRestrictFeatures] = useState(!!gc && Array.isArray(gc.allowedViews));
+  const [featureKeys, setFeatureKeys] = useState((gc && gc.allowedViews) || []);
+
+  if (!gc) return null;
+
+  function toggleProject(id) { setProjectIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]); }
+  function toggleFeature(key) { setFeatureKeys(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]); }
+
+  function save() {
+    updateDB(draft => {
+      const d = draft.guestCodes.find(x => x.id === guestId);
+      if (!d) return;
+      d.firstName = firstName.trim();
+      d.lastName = lastName.trim();
+      d.allowedProjectIds = restrictProjects ? projectIds : null;
+      d.allowedViews = restrictFeatures ? featureKeys : null;
+    });
+    closeModal();
+    toast(t('accessUpdated'));
+  }
+
+  return (
+    <>
+      <ModalHeader title={t('guestAccessSettings')} />
+      <div className="section-label" style={{ margin: '0 0 6px' }}>{t('guestIdentity')}</div>
+      <label className="field-label">{t('firstName')}</label>
+      <input className="input" value={firstName} onChange={e => setFirstName(e.target.value)} autoFocus />
+      <label className="field-label">{t('lastName')}</label>
+      <input className="input" value={lastName} onChange={e => setLastName(e.target.value)} />
+
+      <label className="field-label" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 16 }}>
+        <input type="checkbox" checked={restrictProjects} onChange={e => setRestrictProjects(e.target.checked)} /> {t('restrictProjects')}
+      </label>
+      {restrictProjects ? (
+        <div className="card" style={{ padding: 10, maxHeight: 160, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {db.projects.filter(p => !p.archived).map(p => (
+            <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, cursor: 'pointer' }}>
+              <input type="checkbox" checked={projectIds.includes(p.id)} onChange={() => toggleProject(p.id)} /> {p.name}
+            </label>
+          ))}
+        </div>
+      ) : <p style={{ fontSize: 11, color: 'var(--muted)', margin: '2px 0 0' }}>{t('allProjectsAccess')}</p>}
+
+      <label className="field-label" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 16 }}>
+        <input type="checkbox" checked={restrictFeatures} onChange={e => setRestrictFeatures(e.target.checked)} /> {t('restrictFeatures')}
+      </label>
+      {restrictFeatures ? (
+        <div className="card" style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {GUEST_FEATURE_KEYS.map(k => (
+            <label key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, cursor: 'pointer' }}>
+              <input type="checkbox" checked={featureKeys.includes(k)} onChange={() => toggleFeature(k)} /> {t(k)}
+            </label>
+          ))}
+        </div>
+      ) : <p style={{ fontSize: 11, color: 'var(--muted)', margin: '2px 0 0' }}>{t('allFeaturesAccess')}</p>}
+
+      <div className="modal-foot">
+        <button className="btn btn-ghost" onClick={closeModal}>{t('cancel')}</button>
+        <button className="btn btn-primary" onClick={save}>{t('save')}</button>
+      </div>
+    </>
+  );
+}
+
+function AdminGuests({ db, updateDB, openModal, user, toast, t }) {
   const allowed = db.settings?.allowGuestCodes !== false;
   function generateGuestCode() {
     const code = 'GUEST-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-    updateDB(draft => { draft.guestCodes.unshift({ id: Date.now(), code, createdBy: user.id, uses: 0, max: 5, active: true }); });
+    updateDB(draft => { draft.guestCodes.unshift({ id: Date.now(), code, createdBy: user.id, uses: 0, max: 5, active: true, firstName: '', lastName: '', allowedProjectIds: null, allowedViews: null }); });
     toast('Code généré ✓');
   }
   function copyGuestCode(code) {
@@ -411,6 +483,9 @@ function AdminGuests({ db, updateDB, user, toast, t }) {
   }
   function toggleGuestCode(id) {
     updateDB(draft => { const g = draft.guestCodes.find(x => x.id === id); g.active = !g.active; });
+  }
+  function configureAccess(id) {
+    openModal(<GuestAccessModal guestId={id} />, { wide: true });
   }
   return (
     <>
@@ -421,15 +496,17 @@ function AdminGuests({ db, updateDB, user, toast, t }) {
       {!allowed && <div className="demo-hint" style={{ marginBottom: 12 }}>{t('guestCodesDisabledNote')}</div>}
       <div className="card" style={{ padding: '4px 16px' }}>
         <table className="table">
-          <thead><tr><th>Code</th><th>{t('users')}</th><th>Utilisations</th><th>{t('status')}</th><th>{t('actions')}</th></tr></thead>
+          <thead><tr><th>Code</th><th>{t('guestIdentity')}</th><th>{t('users')}</th><th>Utilisations</th><th>{t('status')}</th><th>{t('actions')}</th></tr></thead>
           <tbody>
             {db.guestCodes.map(g => (
               <tr key={g.id}>
                 <td style={{ fontFamily: 'ui-monospace,monospace', fontWeight: 700 }}>{g.code}</td>
+                <td>{[g.firstName, g.lastName].filter(Boolean).join(' ') || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
                 <td>{member(db, g.createdBy).name}</td>
                 <td>{g.uses}/{g.max}</td>
                 <td><span className="tag-soft" style={g.active ? { background: 'rgba(75,179,122,.15)', color: 'var(--success)' } : { background: 'rgba(229,72,77,.15)', color: 'var(--danger)' }}>{g.active ? t('active') : t('locked')}</span></td>
                 <td>
+                  <button className="btn btn-ghost btn-sm" onClick={() => configureAccess(g.id)}>{t('configureAccess')}</button>
                   <button className="btn btn-ghost btn-sm" onClick={() => copyGuestCode(g.code)}>{t('copied').split(' ')[0]}</button>
                   <button className="btn btn-ghost btn-sm" onClick={() => toggleGuestCode(g.id)}>{g.active ? t('deactivate') : t('activate')}</button>
                 </td>
@@ -485,7 +562,7 @@ export default function Admin() {
   else if (ui.adminTab === 'departments') body = <AdminDepartments db={db} updateDB={updateDB} openModal={openModal} toast={toast} t={t} />;
   else if (ui.adminTab === 'templates') body = <AdminTemplates db={db} updateDB={updateDB} openModal={openModal} toast={toast} t={t} />;
   else if (ui.adminTab === 'audit') body = <AdminAudit db={db} t={t} />;
-  else if (ui.adminTab === 'guests') body = <AdminGuests db={db} updateDB={updateDB} user={user} toast={toast} t={t} />;
+  else if (ui.adminTab === 'guests') body = <AdminGuests db={db} updateDB={updateDB} openModal={openModal} user={user} toast={toast} t={t} />;
   else if (ui.adminTab === 'locked') body = <AdminLocked db={db} updateDB={updateDB} openModal={openModal} t={t} />;
   else if (ui.adminTab === 'settings') body = <AdminSettings db={db} updateDB={updateDB} toast={toast} t={t} />;
   else body = <AdminDashboard db={db} openModal={openModal} setUi={setUi} updateDB={updateDB} user={user} toast={toast} t={t} />;

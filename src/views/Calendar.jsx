@@ -17,21 +17,21 @@ function isoFromOffset(n) {
 export function NewEventModal({ initialOffset = 0, eventId = null, title: modalTitle }) {
   const { db, updateDB, user, closeModal, notify, toast, setUi, t } = useApp();
   const existing = eventId ? db.events.find(x => x.id === eventId) : null;
-  const isHost = !existing || existing.hostId === user.id;
+  const isHost = !existing || existing.hostIds.includes(user.id);
   const [title, setTitle] = useState(existing ? existing.title : '');
   const [description, setDescription] = useState(existing ? (existing.description || '') : '');
   const [offset, setOffset] = useState(existing ? existing.offset : initialOffset);
   const [time, setTime] = useState(existing ? (existing.time || '10:00') : '10:00');
   const [allDay, setAllDay] = useState(existing ? existing.allDay : false);
   const [members, setMembers] = useState(existing ? existing.with.filter(id => id !== user.id) : []);
-  const [hostId, setHostId] = useState(existing ? existing.hostId : user.id);
+  const [hostIds, setHostIds] = useState(existing ? existing.hostIds : [user.id]);
 
   if (eventId && !existing) return null;
 
   function joinNow() { closeModal(); setUi({ view: 'meet', joinEventId: eventId }); }
 
   if (eventId && !isHost) {
-    const host = member(db, existing.hostId);
+    const hosts = existing.hostIds.map(id => member(db, id));
     return (
       <>
         <ModalHeader title={existing.title} />
@@ -44,8 +44,10 @@ export function NewEventModal({ initialOffset = 0, eventId = null, title: modalT
             <span className="member-chip" key={id}><Avatar m={member(db, id)} size="a20" /> {member(db, id).name}</span>
           ))}
         </div>
-        <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 10 }}>
-          {t('hostedBy')} : <Avatar m={host} size="a20" /> {host.name}
+        <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 10, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          {t('hostedBy')} : {hosts.map(h => (
+            <span key={h.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Avatar m={h} size="a20" /> {h.name}</span>
+          ))}
         </div>
         <div className="modal-foot">
           <button className="btn btn-ghost" onClick={closeModal}>{t('close')}</button>
@@ -60,11 +62,13 @@ export function NewEventModal({ initialOffset = 0, eventId = null, title: modalT
   function save() {
     const trimmed = title.trim();
     if (!trimmed) return;
-    const finalHost = (hostId === user.id || members.includes(hostId)) ? hostId : user.id;
+    const validIds = new Set([user.id, ...members]);
+    let finalHosts = hostIds.filter(id => validIds.has(id)).slice(0, 2);
+    if (!finalHosts.length) finalHosts = [user.id];
     const payload = {
       title: trimmed, description: description.trim(),
       offset: Math.max(0, offset || 0), time: allDay ? '' : time, allDay,
-      with: [...new Set([user.id, ...members])], hostId: finalHost,
+      with: [...new Set([user.id, ...members])], hostIds: finalHosts,
     };
     updateDB(draft => {
       if (eventId) {
@@ -115,8 +119,8 @@ export function NewEventModal({ initialOffset = 0, eventId = null, title: modalT
       </label>
       <label className="field-label">{t('invitePeople')}</label>
       <MemberPicker candidates={db.team.filter(m => m.id !== user.id && !m.locked)} selected={members} onChange={setMembers} />
-      <label className="field-label">{t('host')}</label>
-      <MemberPicker candidates={hostCandidates} selected={hostId} onChange={id => setHostId(id || user.id)} multi={false} placeholder={t('host')} />
+      <label className="field-label">{t('hosts')}</label>
+      <MemberPicker candidates={hostCandidates} selected={hostIds} onChange={ids => setHostIds(ids.length ? ids : [user.id])} max={2} placeholder={t('host')} />
       <p style={{ fontSize: 11, color: 'var(--muted)', margin: '2px 0 0' }}>{t('hostHint')}</p>
       <div className="modal-foot">
         {eventId && <button className="btn btn-danger" onClick={del}>{t('delete')}</button>}

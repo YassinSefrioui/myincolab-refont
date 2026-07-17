@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Icon from '../components/Icon.jsx';
+import { buildGuestUser } from '../lib/helpers.js';
 import { useApp } from '../state/AppContext.jsx';
 
 export default function Auth() {
@@ -24,7 +25,7 @@ export default function Auth() {
     const gc = db.guestCodes.find(g => g.code === code && g.active && g.uses < g.max);
     if (!gc) { toast(t('loginFailed')); return; }
     updateDB(draft => { const dg = draft.guestCodes.find(g => g.id === gc.id); if (dg) dg.uses++; });
-    startSession({ id: 'guest', name: 'Invité', initials: 'IN', color: '#9298ab', role: 'GUEST', email: 'guest@incolab.com', presence: 'online' });
+    startSession(buildGuestUser(gc));
   }
 
   let form;

@@ -3,7 +3,7 @@ import Icon from '../../components/Icon.jsx';
 import Avatar from '../../components/Avatar.jsx';
 import NewProjectModal from './NewProjectModal.jsx';
 import ProjectMenu from './ProjectMenu.jsx';
-import { allCards, member, projectDone, projectProgress, projectOverdueCount } from '../../lib/helpers.js';
+import { allCards, member, projectDone, projectProgress, projectOverdueCount, visibleProjectsFor } from '../../lib/helpers.js';
 import { useApp } from '../../state/AppContext.jsx';
 
 function statusOf(p) {
@@ -14,12 +14,13 @@ function statusOf(p) {
 }
 
 export default function ProjectsList({ onOpenProject }) {
-  const { db, openModal, ui, setUi, t } = useApp();
+  const { db, user, openModal, ui, setUi, t } = useApp();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('name');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const withStatus = useMemo(() => db.projects.map(p => ({ p, status: statusOf(p) })), [db.projects]);
+  const projects = visibleProjectsFor(db, user);
+  const withStatus = useMemo(() => projects.map(p => ({ p, status: statusOf(p) })), [projects]);
 
   const counts = useMemo(() => ({
     active: withStatus.filter(x => x.status === 'ACTIVE').length,
