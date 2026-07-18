@@ -276,7 +276,7 @@ export default function ProjectDetail({ projectId, onSwitch, onBack }) {
         <button
           className="btn btn-ghost"
           style={{ marginLeft: 'auto', position: 'relative' }}
-          onClick={() => setUi({ view: 'messages', activeConvId: p.id })}
+          onClick={() => setUi({ view: 'messages', activeConvId: p.id, msgPane: 'chat' })}
         >
           <Icon name="messages" style={{ width: 13, height: 13 }} /> {t('openDiscussion')}
           {unreadCount(db, p.id) > 0 && (

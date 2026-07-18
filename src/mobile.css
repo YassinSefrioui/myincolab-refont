@@ -1,0 +1,171 @@
+/* ============================================================
+   Mobile — barre d'onglets en bas, master/detail messages,
+   panneaux plein écran, modales en bottom-sheet (≤ 768px)
+   ============================================================ */
+
+/* Bouton retour (chat mobile) — masqué sur desktop */
+.msg-back { display: none; }
+
+@media (max-width: 768px) {
+  :root { --mnav-h: calc(56px + env(safe-area-inset-bottom, 0px)); }
+
+  /* ---------- Coquille : la nav gauche devient une barre d'onglets en bas ---------- */
+  .app-shell { flex-direction: column; height: 100dvh; }
+  .app-main { order: 1; min-height: 0; }
+  .left-nav {
+    order: 2;
+    width: 100%;
+    height: var(--mnav-h);
+    flex-direction: row;
+    align-items: stretch;
+    gap: 2px;
+    padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px));
+    border-right: none;
+    border-top: 1px solid var(--border);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .nav-logo { display: none; }
+  .nav-item {
+    width: auto;
+    min-width: 56px;
+    flex: 1 0 auto;
+    padding: 4px 6px;
+    justify-content: center;
+    gap: 3px;
+  }
+  .nav-item .nav-label { display: block; font-size: 8.5px; }
+  .nav-item .badge { top: 0; right: 4px; }
+
+  /* ---------- Header compact ---------- */
+  .app-header { height: 54px; padding: 0 12px; gap: 10px; }
+  .header-search { flex: 1; width: auto; min-width: 0; }
+  .header-right { gap: 8px; }
+  .profile-menu {
+    position: fixed;
+    top: 60px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  /* ---------- Contenu ---------- */
+  .content { padding: 14px 12px 18px; }
+
+  /* ---------- Messages : liste plein écran ⇄ conversation plein écran ---------- */
+  .secondary-col { width: 100%; border-right: none; padding: 12px 10px 16px; }
+  .app-body.pane-chat .secondary-col { display: none; }
+  .app-body.pane-list .content { display: none; }
+  .msg-back { display: inline-flex; flex-shrink: 0; }
+
+  .chat-head { padding: 10px 12px; margin-bottom: 10px; gap: 8px; }
+  .chat-title { font-size: 14.5px; }
+  .msg-text, .msg-quote, .reply-preview-text { max-width: none; }
+  .chat-input-bar-wrap { margin-right: 0; }
+  .msg-thread-inline { margin-left: 20px; padding-left: 10px; }
+
+  /* ---------- Panneaux flottants → pleine largeur ---------- */
+  .notif-panel, .search-panel {
+    top: 60px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: calc(100dvh - var(--mnav-h) - 76px);
+    transform: none;
+  }
+  .ai-panel {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: calc(var(--mnav-h) + 12px);
+    height: min(480px, calc(100dvh - var(--mnav-h) - 84px));
+  }
+  .fab-ai { bottom: calc(var(--mnav-h) + 14px); right: 14px; }
+  .toast-root { bottom: calc(var(--mnav-h) + 12px); width: calc(100% - 24px); }
+
+  /* ---------- Modales → bottom-sheet ---------- */
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal, .modal.wide {
+    max-width: 100%;
+    border-radius: 18px 18px 0 0;
+    max-height: 92dvh;
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    animation: sheetIn .25s ease;
+  }
+  @keyframes sheetIn {
+    from { opacity: 0; transform: translateY(36px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* ---------- Accueil ---------- */
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { min-width: 0; }
+  .home-cols { gap: 14px; }
+  .home-left, .home-right { flex: 1 1 100%; min-width: 0; }
+
+  /* ---------- Kanban : défilement horizontal avec accroche ---------- */
+  .kanban { gap: 10px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+  .kanban-col { flex: 0 0 auto; width: min(80vw, 300px); min-width: 0; scroll-snap-align: start; }
+
+  /* ---------- Calendrier : les événements deviennent des barres ---------- */
+  .cal-grid { gap: 3px; }
+  .cal-cell { min-height: 52px; padding: 4px; border-radius: 6px; }
+  .cal-daynum { font-size: 10px; margin-bottom: 3px; }
+  .cal-event { height: 5px; padding: 0; font-size: 0; border-radius: 3px; margin-bottom: 2px; }
+
+  /* ---------- Meet ---------- */
+  .meet-grid { gap: 8px; }
+  .meet-tile { min-height: 104px; }
+  .meet-stage { flex-direction: column; gap: 10px; padding: 10px 0; }
+  .meet-strip {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .meet-strip .meet-tile.small { width: 130px; flex: 0 0 auto; }
+  .meet-controls { gap: 10px; flex-wrap: wrap; }
+  .call-panel-fullscreen { padding: 18px 14px calc(18px + env(safe-area-inset-bottom, 0px)); }
+
+  /* ---------- Tableaux (admin, listes) : défilement horizontal ---------- */
+  .table { display: block; overflow-x: auto; }
+  .table th, .table td { white-space: nowrap; }
+  .admin-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  /* ---------- Divers ---------- */
+  .subgroup-wrap { margin-left: 10px; padding-left: 10px; }
+  .tour-tooltip { max-width: calc(100vw - 20px); }
+  .dp-panel, .cmp-panel { max-width: calc(100vw - 40px); }
+  .profile-head { gap: 12px; }
+}
+
+/* ============================================================
+   Tablette (769–1024px) — rail compact, colonnes resserrées
+   ============================================================ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .left-nav { width: 64px; }
+  .nav-item { width: 48px; }
+  .nav-item .nav-label { display: none; }
+  .header-search { width: 220px; }
+  .secondary-col { width: 200px; }
+  .content { padding: 18px; }
+  .home-left { min-width: 280px; }
+  .kanban-col { min-width: 210px; }
+  .msg-text, .msg-quote { max-width: 420px; }
+  .search-panel { width: min(560px, calc(100vw - 32px)); }
+  .meet-strip { width: 140px; }
+  .meet-strip .meet-tile.small { min-height: 84px; height: 84px; }
+}
+
+/* ============================================================
+   Écrans tactiles (pas de survol) — actions toujours accessibles
+   ============================================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* La barre de réactions s'affiche en touchant le message */
+  .msg-row.tapped .msg-hover-toolbar { opacity: 1; pointer-events: auto; }
+  .msg-row.tapped { background: var(--surface-2); }
+  .msg-row.tapped .msg-continued-time { opacity: 1; }
+  /* Actions normalement révélées au survol */
+  .file-actions { opacity: 1; }
+  .clock-remove { opacity: 1; }
+}

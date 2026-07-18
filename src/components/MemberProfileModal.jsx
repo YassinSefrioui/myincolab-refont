@@ -27,7 +27,7 @@ export default function MemberProfileModal({ memberId }) {
       dm = { id };
     }
     closeModal();
-    setUi({ view: 'messages', activeConvId: dm.id });
+    setUi({ view: 'messages', activeConvId: dm.id, msgPane: 'chat' });
   }
   function manageVisibility() { closeModal(); setUi({ view: 'profile' }); }
 

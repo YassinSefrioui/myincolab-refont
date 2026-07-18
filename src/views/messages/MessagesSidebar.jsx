@@ -19,7 +19,7 @@ function NewDMModal() {
       draft.messagesByConv[id] = [];
     });
     closeModal();
-    setUi({ activeConvId: id });
+    setUi({ activeConvId: id, msgPane: 'chat' });
   }
   return (
     <>
@@ -51,7 +51,7 @@ function NewGroupChatModal() {
       draft.messagesByConv[id] = [];
     });
     closeModal();
-    setUi({ activeConvId: id });
+    setUi({ activeConvId: id, msgPane: 'chat' });
   }
   return (
     <>
@@ -92,7 +92,7 @@ function ConvRow({ active, icon, unread, name, convId, onClick }) {
 export default function MessagesSidebar() {
   const { db, user, ui, setUi, go, openModal, t } = useApp();
 
-  function switchConv(id) { setUi({ activeConvId: id }); }
+  function switchConv(id) { setUi({ activeConvId: id, msgPane: 'chat' }); }
 
   const activeProjects = visibleProjectsFor(db, user).filter(p => !p.archived);
   const canEditMessages = hasGuestExecute(user, 'messages');

@@ -14,16 +14,18 @@ const REPLY_POOL = [
 ];
 
 export default function Messages() {
-  const { db, updateDB, user, prefs, ui, toast, openModal, chatCall, startChatCall, endChatCall, t } = useApp();
+  const { db, updateDB, user, prefs, ui, setUi, toast, openModal, chatCall, startChatCall, endChatCall, t } = useApp();
   const [input, setInput] = useState('');
   const [summary, setSummary] = useState(null);
   const [typingNote, setTypingNote] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
+  const [tappedMsg, setTappedMsg] = useState(null);
   const [openMarker, setOpenMarker] = useState(0);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
   const replyTimer = useRef(null);
   const inputRef = useRef(null);
+  const touchStart = useRef(null);
 
   const convId = ui.activeConvId;
   const msgs = db.messagesByConv[convId] || [];
@@ -37,7 +39,7 @@ export default function Messages() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [msgs.length, convId]);
 
-  useEffect(() => { setSummary(null); setReplyingTo(null); }, [convId]);
+  useEffect(() => { setSummary(null); setReplyingTo(null); setTappedMsg(null); }, [convId]);
   useEffect(() => () => { if (replyTimer.current) clearTimeout(replyTimer.current); }, []);
 
   // Capture les messages non lus au moment de l'ouverture (avant de marquer comme lu),
@@ -62,6 +64,22 @@ export default function Messages() {
   function startReply(msgId) {
     setReplyingTo(msgId);
     inputRef.current?.focus();
+  }
+
+  // Mobile : balayer vers la droite ramène à la liste des conversations.
+  // Le seuil vertical évite de déclencher le retour pendant un défilement du fil.
+  function onTouchStart(e) {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+  }
+  function onTouchEnd(e) {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (dx > 60 && Math.abs(dy) < dx * 0.6) setUi({ msgPane: 'list' });
   }
 
   function scrollToMessage(msgId) {
@@ -134,8 +152,11 @@ export default function Messages() {
   }
 
   return (
-    <div className="chat-view view-anim">
+    <div className="chat-view view-anim" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <div className="chat-head">
+        <button className="icon-btn msg-back" onClick={() => setUi({ msgPane: 'list' })} title={t('messages')}>
+          <Icon name="chevron" style={{ transform: 'rotate(90deg)' }} />
+        </button>
         <div className="chat-title clickable" onClick={() => openModal(<ConvInfoModal convId={convId} />, { wide: true })} title={t('conversationInfo')}>
           {label}
           <Icon name="chevron" style={{ width: 11, height: 11, opacity: .45, transform: 'rotate(-90deg)' }} />
@@ -181,7 +202,11 @@ export default function Messages() {
           const isUnread = m.id > openMarker && m.user !== user.id;
           const quoted = m.replyTo ? msgs.find(x => x.id === m.replyTo) : null;
           return (
-            <div className={`msg-row${continued ? ' continued' : ''}${isUnread ? ' unread-msg' : ''}`} key={m.id} id={'msg-' + m.id}>
+            <div
+              className={`msg-row${continued ? ' continued' : ''}${isUnread ? ' unread-msg' : ''}${tappedMsg === m.id ? ' tapped' : ''}`}
+              key={m.id} id={'msg-' + m.id}
+              onClick={() => setTappedMsg(prev => (prev === m.id ? null : m.id))}
+            >
               <div className="msg-group">
                 <div className="msg-group-avatar-col">
                   {continued ? <span className="msg-continued-time">{m.time}</span> : <Avatar m={u} size="a30" withPresence />}

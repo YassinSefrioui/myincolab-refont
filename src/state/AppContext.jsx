@@ -122,6 +122,8 @@ export function AppProvider({ children }) {
     view: 'home',
     activeProjectId: 'launch',
     activeConvId: 'launch',
+    // Mobile : 'list' affiche la liste des conversations, 'chat' la conversation active.
+    msgPane: 'list',
     adminTab: 'dashboard',
     filesFolder: 'root',
     filesTab: 'all',
@@ -230,7 +232,7 @@ export function AppProvider({ children }) {
   }, [updateDB, prefs.lang]);
 
   const go = useCallback(view => {
-    setUi({ view });
+    setUi({ view, msgPane: 'list' });
     closeAllModals();
     setNotifOpen(false);
     setTourKey(null);

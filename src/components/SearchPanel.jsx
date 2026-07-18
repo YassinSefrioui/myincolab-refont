@@ -21,7 +21,7 @@ export default function SearchPanel() {
   Object.entries(db.messagesByConv).forEach(([convId, msgs]) => {
     msgs.forEach(m => {
       if (m.text.toLowerCase().includes(needle)) {
-        hits.push({ type: '💬', text: m.text.slice(0, 60) + ' · ' + convLabel(db, convId), run: () => { setUi({ activeConvId: convId }); go('messages'); } });
+        hits.push({ type: '💬', text: m.text.slice(0, 60) + ' · ' + convLabel(db, convId), run: () => { go('messages'); setUi({ activeConvId: convId, msgPane: 'chat' }); } });
       }
     });
   });

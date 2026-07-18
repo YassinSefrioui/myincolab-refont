@@ -74,7 +74,7 @@ export default function App() {
         <NavRail />
         <div className="app-main">
           <Header />
-          <div className="app-body">
+          <div className={`app-body${ui.view === 'messages' ? ` pane-${ui.msgPane || 'list'}` : ''}`}>
             <SecondaryCol />
             <main id="content" className="content" tabIndex={-1} ref={contentRef}>
               <ViewComponent />

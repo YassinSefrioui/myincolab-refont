@@ -65,7 +65,7 @@ export default function CallIsland() {
         icon={chatCall.type === 'video' ? 'cam' : 'phone'}
         label={convLabel(db, chatCall.convId)}
         startedAt={chatCall.startedAt}
-        onReturn={() => setUi({ view: 'messages', activeConvId: chatCall.convId })}
+        onReturn={() => setUi({ view: 'messages', activeConvId: chatCall.convId, msgPane: 'chat' })}
         onEnd={endChatCall}
         returnTitle={t('returnToCall')}
         endTitle={t('leaveCall')}
