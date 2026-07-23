@@ -49,6 +49,10 @@
     width: auto;
   }
 
+  /* Le header compact mobile (54px) est plus bas que sur desktop (voir
+     base.css) — la pastille d'appel remonte d'autant. */
+  .call-island-stack { top: calc(64px + env(safe-area-inset-top, 0px)); }
+
   /* ---------- Contenu ---------- */
   .content { padding: 14px 12px 18px; }
 

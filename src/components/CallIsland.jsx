@@ -9,6 +9,14 @@ function fmtElapsed(s) {
   return `${m}:${String(sec).padStart(2, '0')}`;
 }
 
+function initialsOf(label) {
+  const parts = label.trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?';
+}
+
+// Pastille d'appel flottante affichée tant qu'on est ailleurs que sur l'appel en
+// cours — verre dépoli + halo dégradé assortis au reste de l'app plutôt qu'un
+// clone de la Dynamic Island.
 function IslandPill({
   icon, label, startedAt, onReturn, onEnd, returnTitle, endTitle,
   micOn, onToggleMic, micOnTitle, micOffTitle,
@@ -20,16 +28,28 @@ function IslandPill({
     return () => clearInterval(id);
   }, []);
   const elapsed = Math.max(0, Math.floor((now - startedAt) / 1000));
+  const initials = initialsOf(label);
+
   return (
-    <div className="call-island" onClick={onReturn} title={returnTitle}>
-      <span className="call-island-dot" />
-      <span className="call-island-icon"><Icon name={icon} /></span>
-      <span className="call-island-label">{label}</span>
-      <span className="call-island-timer">{fmtElapsed(elapsed)}</span>
-      <div className="call-island-hover-controls">
+    <div className="call-island">
+      <div className="call-island-main" onClick={onReturn} title={returnTitle}>
+        <span className="call-island-avatar">
+          {initials}
+          <span className="call-island-live-ring" />
+        </span>
+        <span className="call-island-body">
+          <span className="call-island-label">{label}</span>
+          <span className="call-island-meta">
+            <span className="call-island-dot" />
+            {fmtElapsed(elapsed)}
+          </span>
+        </span>
+        <span className="call-island-type-icon"><Icon name={icon} /></span>
+      </div>
+      <div className="call-island-controls">
         <button
           className={`call-island-ctl${micOn ? '' : ' off'}`}
-          onClick={e => { e.stopPropagation(); onToggleMic(); }}
+          onClick={onToggleMic}
           title={micOn ? micOnTitle : micOffTitle}
         >
           <Icon name={micOn ? 'mic' : 'micOff'} />
@@ -37,16 +57,16 @@ function IslandPill({
         {showCam && (
           <button
             className={`call-island-ctl${camOn ? '' : ' off'}`}
-            onClick={e => { e.stopPropagation(); onToggleCam(); }}
+            onClick={onToggleCam}
             title={camOn ? camOnTitle : camOffTitle}
           >
             <Icon name={camOn ? 'cam' : 'camOff'} />
           </button>
         )}
+        <button className="call-island-end" onClick={onEnd} title={endTitle}>
+          <Icon name="leave" />
+        </button>
       </div>
-      <button className="call-island-end" onClick={e => { e.stopPropagation(); onEnd(); }} title={endTitle}>
-        <Icon name="leave" />
-      </button>
     </div>
   );
 }
